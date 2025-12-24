@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UnixBox - Unix V5 (November 1974)</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><text y='75' x='50' text-anchor='middle' font-size='80' fill='%2300ff00' font-family='monospace'>$</text></svg>">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #000;
+      color: #00ff00;
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    header {
+      background: #001a00;
+      border-bottom: 2px solid #00ff00;
+      padding: 1rem 2rem;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+      animation: flicker 3s infinite alternate;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.95; }
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #00cc00;
+      margin-top: 0.25rem;
+      opacity: 0.8;
+    }
+
+    #terminal-container {
+      flex: 1;
+      padding: 1rem;
+      background: #001100;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* CRT screen effect */
+    #terminal-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%,
+        rgba(0, 0, 0, 0.25) 50%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* CRT glow */
+    #terminal-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(0, 255, 0, 0.1) 0%,
+        transparent 70%
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #terminal {
+      position: relative;
+      z-index: 3;
+      height: 100%;
+    }
+
+    /* xterm.js overrides for retro look */
+    .xterm {
+      height: 100%;
+      padding: 10px;
+    }
+
+    .xterm-viewport {
+      background-color: transparent !important;
+    }
+
+    .xterm-screen {
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    }
+
+    /* Loading overlay */
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease-out;
+    }
+
+    #loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(0, 255, 0, 0.1);
+      border-top: 4px solid #00ff00;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+      color: #00ff00;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Status bar */
+    #status-bar {
+      background: #001a00;
+      border-top: 2px solid #00ff00;
+      padding: 0.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-label {
+      color: #00cc00;
+      opacity: 0.8;
+    }
+
+    .status-value {
+      color: #00ff00;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    .status-indicator.halted {
+      background: #ff3300;
+      box-shadow: 0 0 10px rgba(255, 51, 0, 0.8);
+      animation: none;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Control panel */
+    #control-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 26, 0, 0.95);
+      border: 2px solid #00ff00;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 0 40px rgba(0, 255, 0, 0.5);
+      z-index: 1000;
+      min-width: 400px;
+      transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    }
+
+    #control-panel.hidden {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.9);
+      pointer-events: none;
+    }
+
+    .panel-header {
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: #00ff00;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+      border-bottom: 1px solid #00ff00;
+      padding-bottom: 0.5rem;
+    }
+
+    .panel-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-section-title {
+      font-size: 0.9rem;
+      color: #00cc00;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: #001a00;
+      border: 2px solid #00ff00;
+      color: #00ff00;
+      padding: 0.6rem 1.2rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    button:hover {
+      background: #003300;
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
+    }
+
+    button.active {
+      background: #00ff00;
+      color: #000;
+      text-shadow: none;
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    .file-label {
+      display: inline-block;
+      background: #001a00;
+      border: 2px solid #00ff00;
+      color: #00ff00;
+      padding: 0.6rem 1.2rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    }
+
+    .file-label:hover {
+      background: #003300;
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .panel-hint {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(0, 255, 0, 0.3);
+      text-align: center;
+      color: #00cc00;
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Initializing PDP-11/40...</div>
+  </div>
+
+  <!-- Control panel (hidden by default, toggle with Escape) -->
+  <div id="control-panel" class="hidden">
+    <div class="panel-header">System Controls</div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">System</div>
+      <div class="button-group">
+        <button id="reset-btn">Reset</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">CPU Speed</div>
+      <div class="button-group">
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="4">4x</button>
+        <button class="speed-btn" data-speed="max">MAX</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Disk Image</div>
+      <input type="file" id="file-input" accept=".img,.dsk,.zst">
+      <label for="file-input" class="file-label">Load Disk Image</label>
+    </div>
+
+    <div class="panel-hint">Press ESC to close</div>
+  </div>
+
+  <div id="app">
+    <header>
+      <h1>UnixBox - Unix V5 (November 1974)</h1>
+      <div class="subtitle">PDP-11/40 Emulator - 16-bit Minicomputer Experience</div>
+      <div id="era-selector-container"></div>
+    </header>
+    <div id="terminal-container">
+      <div id="terminal"></div>
+    </div>
+    <div id="status-bar">
+      <div class="status-item">
+        <span class="status-indicator" id="cpu-indicator"></span>
+        <span class="status-label">CPU:</span>
+        <span class="status-value" id="cpu-state">RUNNING</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">MEM:</span>
+        <span class="status-value" id="memory-usage">0 KB / 248 KB</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">TIME:</span>
+        <span class="status-value" id="system-time">00:00:00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden elements required by PDP-11 emulator -->
+  <!-- Console terminal (id=0) - required by dl11 device in iopage.js -->
+  <textarea id="0" style="display:none; position:absolute; left:-9999px;"></textarea>
+  <!-- Container for additional terminal windows -->
+  <div id="dl11" style="display:none;"></div>
+  <!-- Paper tape reader (ptr) - optional but suppresses errors -->
+  <input type="text" id="ptr" style="display:none;" />
+  <!-- Line printer output -->
+  <div id="lp11" style="display:none;"></div>
+
+  <!-- fzstd library for disk image decompression -->
+  <script src="https://unpkg.com/fzstd@0.1.1"></script>
+  <script type="module" src="/src/main.ts"></script>
+
+  <script>
+    // Control panel toggle (Escape key)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const panel = document.getElementById('control-panel');
+        panel.classList.toggle('hidden');
+      }
+    });
+
+    // Export control panel functions for main.ts to use
+    window.unixBoxControls = {
+      hideLoading: () => {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.add('hidden');
+      },
+      updateCPUState: (state) => {
+        const indicator = document.getElementById('cpu-indicator');
+        const stateEl = document.getElementById('cpu-state');
+        stateEl.textContent = state.toUpperCase();
+        if (state === 'halted') {
+          indicator.classList.add('halted');
+        } else {
+          indicator.classList.remove('halted');
+        }
+      },
+      updateMemoryUsage: (used, total) => {
+        const memEl = document.getElementById('memory-usage');
+        memEl.textContent = `${used} KB / ${total} KB`;
+      },
+      updateSystemTime: (time) => {
+        const timeEl = document.getElementById('system-time');
+        timeEl.textContent = time;
+      }
+    };
+
+    // Speed button handling
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const speed = btn.dataset.speed;
+        // Dispatch event for main.ts to handle
+        window.dispatchEvent(new CustomEvent('speedChange', { detail: { speed } }));
+      });
+    });
+
+    // Reset button handling
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('systemReset'));
+    });
+
+    // File input handling
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        window.dispatchEvent(new CustomEvent('loadDiskImage', { detail: { file } }));
+      }
+    });
+  </script>
+</body>
+</html>

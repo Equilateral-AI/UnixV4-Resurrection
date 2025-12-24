@@ -1,0 +1,62 @@
+{
+  "eras": {
+    "v4": {
+      "id": "v4",
+      "name": "Unix V4 (November 1973)",
+      "year": 1973,
+      "diskImage": "/disk-images/unix-v4.dsk",
+      "bootCommand": "boot tm0",
+      "notes": "First version rewritten in C. Recently recovered from Bell Labs (December 2024)!",
+      "features": ["C kernel", "pipes", "grep"],
+      "memory": "64 KB",
+      "banner": [
+        "╔════════════════════════════════════════════════════════════════════════════╗",
+        "║                          UNIX Fourth Edition                               ║",
+        "║                          November 1973                                     ║",
+        "║                                                                            ║",
+        "║                    First Unix written in C                                 ║",
+        "║              Recently recovered from Bell Labs tape!                       ║",
+        "╚════════════════════════════════════════════════════════════════════════════╝"
+      ]
+    },
+    "v5": {
+      "id": "v5",
+      "name": "Unix V5 (November 1974)",
+      "year": 1974,
+      "diskImage": "/disk-images/unix-v5.dsk",
+      "bootCommand": "boot rk0",
+      "notes": "Complete source code preserved. The version we have full source for.",
+      "features": ["C kernel", "improved shell", "yacc"],
+      "memory": "256 KB",
+      "banner": [
+        "╔════════════════════════════════════════════════════════════════════════════╗",
+        "║                          UNIX Fifth Edition                                ║",
+        "║                          November 1974                                     ║",
+        "║                                                                            ║",
+        "║                    PDP-11/40 - 16-bit Minicomputer                         ║",
+        "╚════════════════════════════════════════════════════════════════════════════╝"
+      ]
+    },
+    "v6": {
+      "id": "v6",
+      "name": "Unix V6 (May 1975)",
+      "year": 1975,
+      "diskImage": "/vendor/pdp11/media/rk0.dsk.zst",
+      "bootCommand": "boot rk0",
+      "notes": "Lions' Commentary era. Most documented early Unix.",
+      "features": ["portable C", "improved pipes", "full documentation"],
+      "memory": "256 KB",
+      "compressed": true,
+      "banner": [
+        "╔════════════════════════════════════════════════════════════════════════════╗",
+        "║                          UNIX Sixth Edition                                ║",
+        "║                          May 1975                                          ║",
+        "║                                                                            ║",
+        "║                    Lions' Commentary Era                                   ║",
+        "║              Most documented early Unix version                            ║",
+        "╚════════════════════════════════════════════════════════════════════════════╝"
+      ]
+    }
+  },
+  "defaultEra": "v5"
+}

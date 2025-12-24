@@ -1,0 +1,123 @@
+{
+  "syscalls": {
+    "fork": {
+      "file": "sys1.c",
+      "description": "Create a new process",
+      "startLine": 283,
+      "code": "fork()\n{\n\tregister struct proc *p1, *p2;\n\n\tp1 = u.u_procp;\n\tfor(p2 = &proc[0]; p2 < &proc[NPROC]; p2++)\n\t\tif(p2->p_stat == NULL)\n\t\t\tgoto found;\n\tu.u_error = EAGAIN;\n\tgoto out;\n\nfound:\n\tif(newproc()) {\n\t\tu.u_ar0[R0] = p1->p_pid;\n\t\tu.u_cstime[0] = 0;\n\t\tu.u_cstime[1] = 0;\n\t\tu.u_stime = 0;\n\t\tu.u_cutime[0] = 0;\n\t\tu.u_cutime[1] = 0;\n\t\tu.u_utime = 0;\n\t\treturn;\n\t}\n\tu.u_ar0[R0] = p2->p_pid;\n\nout:\n\tu.u_ar0[R7] =+ 2;\n}"
+    },
+    "exec": {
+      "file": "sys1.c",
+      "description": "Execute a program",
+      "startLine": 16,
+      "code": "exec()\n{\n\tint ap, na, nc, *bp;\n\tint ts, ds;\n\tregister c, *ip;\n\tregister char *cp;\n\textern uchar;\n\n\t/*\n\t * pick up file names\n\t * and check various modes\n\t * for execute permission\n\t */\n\n\tip = namei(&uchar, 0);\n\tif(ip == NULL)\n\t\treturn;\n\twhile(execnt >= NEXEC)\n\t\tsleep(&execnt);\n\texecnt++;\n\tbp = getblk(NODEV);\n\tif(access(ip, IEXEC) || (ip->i_mode&IFMT)!=0)\n\t\tgoto bad;"
+    },
+    "read": {
+      "file": "sys2.c",
+      "description": "Read from file descriptor",
+      "startLine": 13,
+      "code": "read()\n{\n\trdwr(FREAD);\n}\n\nwrite()\n{\n\trdwr(FWRITE);\n}\n\nrdwr(mode)\n{\n\tregister *fp, m;\n\n\tm = mode;\n\tfp = getf(u.u_ar0[R0]);\n\tif(fp == NULL)\n\t\treturn;\n\tif((fp->f_flag&m) == 0) {\n\t\tu.u_error = EBADF;\n\t\treturn;\n\t}\n\tu.u_base = u.u_arg[0];\n\tu.u_count = u.u_arg[1];\n\tu.u_segflg = 0;\n\tif(fp->f_flag&FPIPE) {\n\t\tif(m==FREAD)\n\t\t\treadp(fp); else\n\t\t\twritep(fp);\n\t} else {\n\t\tu.u_offset[1] = fp->f_offset[1];\n\t\tu.u_offset[0] = fp->f_offset[0];\n\t\tif(m==FREAD)\n\t\t\treadi(fp->f_inode); else\n\t\t\twritei(fp->f_inode);\n\t\tdpadd(fp->f_offset, u.u_arg[1]-u.u_count);\n\t}\n\tu.u_ar0[R0] = u.u_arg[1]-u.u_count;\n}"
+    },
+    "write": {
+      "file": "sys2.c",
+      "description": "Write to file descriptor",
+      "startLine": 18,
+      "code": "write()\n{\n\trdwr(FWRITE);\n}"
+    },
+    "open": {
+      "file": "sys2.c",
+      "description": "Open a file",
+      "startLine": 53,
+      "code": "open()\n{\n\tregister *ip;\n\textern uchar;\n\n\tip = namei(&uchar, 0);\n\tif(ip == NULL)\n\t\treturn;\n\tu.u_arg[1]++;\n\topen1(ip, u.u_arg[1], 0);\n}"
+    },
+    "creat": {
+      "file": "sys2.c",
+      "description": "Create a file",
+      "startLine": 65,
+      "code": "creat()\n{\n\tregister *ip;\n\textern uchar;\n\n\tip = namei(&uchar, 1);\n\tif(ip == NULL) {\n\t\tif(u.u_error)\n\t\t\treturn;\n\t\tip = maknode(u.u_arg[1]&07777);\n\t\topen1(ip, FWRITE, 2);\n\t} else\n\t\topen1(ip, FWRITE, 1);\n}"
+    },
+    "close": {
+      "file": "sys2.c",
+      "description": "Close a file descriptor",
+      "startLine": 115,
+      "code": "close()\n{\n\tregister *fp;\n\n\tfp = getf(u.u_ar0[R0]);\n\tif(fp == NULL)\n\t\treturn;\n\tu.u_ofile[u.u_ar0[R0]] = NULL;\n\tclosef(fp);\n}"
+    },
+    "wait": {
+      "file": "sys1.c",
+      "description": "Wait for child process",
+      "startLine": 243,
+      "code": "wait()\n{\n\tregister f, *bp;\n\tregister struct proc *p;\n\n\tf = 0;\n\nloop:\n\tfor(p = &proc[0]; p < &proc[NPROC]; p++)\n\tif(p->p_ppid == u.u_procp->p_pid) {\n\t\tf++;\n\t\tif(p->p_stat == SZOMB) {\n\t\t\tu.u_ar0[R0] = p->p_pid;\n\t\t\tbp = bread(swapdev, f=p->p_addr);\n\t\t\tmfree(swapmap, 8, f);\n\t\t\tp->p_stat = NULL;\n\t\t\tp->p_pid = 0;\n\t\t\tp->p_ppid = 0;"
+    },
+    "exit": {
+      "file": "sys1.c",
+      "description": "Terminate process",
+      "startLine": 203,
+      "code": "exit()\n{\n\tregister int *q, a;\n\tregister struct proc *p;\n\n\tfor(q = &u.u_signal[0]; q < &u.u_signal[NSIG];)\n\t\t*q++ = 1;\n\tfor(q = &u.u_ofile[0]; q < &u.u_ofile[NOFILE]; q++)\n\t\tif(a = *q) {\n\t\t\t*q = NULL;\n\t\t\tclosef(a);\n\t\t}\n\tiput(u.u_cdir);\n\txfree();\n\ta = malloc(swapmap, 8);\n\tp = getblk(swapdev, a);\n\tbcopy(&u, p->b_addr, 256);\n\tbwrite(p);\n\tq = u.u_procp;\n\tmfree(coremap, q->p_size, q->p_addr);\n\tq->p_addr = a;\n\tq->p_stat = SZOMB;"
+    },
+    "pipe": {
+      "file": "pipe.c",
+      "description": "Create pipe",
+      "startLine": 14,
+      "code": "pipe()\n{\n\tregister *ip, *rf, *wf;\n\n\tip = ialloc(rootdev);\n\tif(ip == NULL)\n\t\treturn;\n\twf = falloc();\n\tif(wf == NULL) {\n\t\tiput(ip);\n\t\treturn;\n\t}\n\tu.u_ar0[R1] = u.u_ar0[R0];\n\trf = falloc();\n\tif(rf == NULL) {\n\t\twf->f_count = 0;\n\t\tu.u_ofile[u.u_ar0[R1]] = NULL;\n\t\tiput(ip);\n\t\treturn;\n\t}\n\twf->f_flag = FWRITE|FPIPE;\n\twf->f_inode = ip;\n\trf->f_flag = FREAD|FPIPE;\n\trf->f_inode = ip;\n\tip->i_count = 2;\n\tip->i_flag = IACC|IUPD;\n\tip->i_mode = IALLOC;\n}"
+    },
+    "swtch": {
+      "file": "slp.c",
+      "description": "Process scheduler context switch",
+      "startLine": 192,
+      "code": "swtch()\n{\n\tstatic int *p;\n\tregister i, n;\n\tregister struct proc *rp;\n\n\tif(p == NULL)\n\t\tp = &proc[0];\n\tsavu(u.u_rsav);\n\tretu(proc[0].p_addr);\n\nloop:\n\trp = p;\n\tp = NULL;\n\tn = 127;\n\tfor(i=0; i<NPROC; i++) {\n\t\trp++;\n\t\tif(rp >= &proc[NPROC])\n\t\t\trp = &proc[0];\n\t\tif(rp->p_stat==SRUN && (rp->p_flag&SLOAD)!=0) {\n\t\t\tif(rp->p_pri < n) {\n\t\t\t\tp = rp;\n\t\t\t\tn = rp->p_pri;\n\t\t\t}\n\t\t}\n\t}\n\tif(p == NULL) {\n\t\tp = rp;\n\t\tidle();\n\t\tgoto loop;\n\t}\n\trp = p;\n\tretu(rp->p_addr);\n\tsureg();\n\tif(rp->p_flag&SSWAP) {\n\t\trp->p_flag =& ~SSWAP;\n\t\taretu(u.u_ssav);\n\t}\n\treturn(1);\n}",
+      "note": "This function contains scheduling logic that early Unix developers found complex."
+    },
+    "sleep": {
+      "file": "slp.c",
+      "description": "Put process to sleep",
+      "startLine": 20,
+      "code": "sleep(chan, pri)\n{\n\tregister *rp, s;\n\n\tu.u_dsleep = 0;\n\ts = PS->integ;\n\trp = u.u_procp;\n\tif(pri >= 0) {\n\t\tif(issig())\n\t\t\tgoto psig;\n\t\trp->p_wchan = chan;\n\t\trp->p_stat = SWAIT;\n\t\trp->p_pri = pri;\n\t\tspl0();\n\t\tif(runin != 0) {\n\t\t\trunin = 0;\n\t\t\twakeup(&runin);\n\t\t}\n\t\tswtch();\n\t\tif(issig()) {\n\t\tpsig:\n\t\t\taretu(u.u_qsav);\n\t\t\treturn;\n\t\t}\n\t} else {\n\t\trp->p_wchan = chan;\n\t\trp->p_stat = SSLEEP;\n\t\trp->p_pri = pri;\n\t\tspl0();\n\t\tswtch();\n\t}\n\tPS->integ = s;\n}"
+    },
+    "wakeup": {
+      "file": "slp.c",
+      "description": "Wake up sleeping processes",
+      "startLine": 54,
+      "code": "wakeup(chan)\n{\n\tregister struct proc *p;\n\tregister n, c;\n\nloop:\n\tc = chan;\n\tn = 0;\n\tfor(p = &proc[0]; p < &proc[NPROC]; p++)\n\t\tif(p->p_wchan == c) {\n\t\t\tif(runout!=0 && (p->p_flag&SLOAD)==0) {\n\t\t\t\trunout = 0;\n\t\t\t\tn++;\n\t\t\t}\n\t\t\tp->p_wchan = 0;\n\t\t\tp->p_stat = SRUN;\n\t\t\trunrun++;\n\t\t}\n\tif(n) {\n\t\tchan = &runout;\n\t\tgoto loop;\n\t}\n}"
+    },
+    "trap": {
+      "file": "trap.c",
+      "description": "System call trap handler",
+      "startLine": 25,
+      "code": "trap(dev, sp, r1, nps, r0, pc, ps)\nchar *sp;\n{\n\tregister i, a;\n\tregister struct sysent *callp;\n\n\tsavfp();\n\tu.u_ar0 = &r0;\n\tif(dev == 8) {\n\t\tpsignal(u.u_procp, SIGFPT);\n\t\tif((ps&UMODE) == UMODE)\n\t\t\tgoto err;\n\t\treturn;\n\t}\n\tif(dev==1 && fuword(pc-2)==SETD && u.u_signal[SIGINS]==0)\n\t\treturn;\n\tif((ps&UMODE) != UMODE)\n\t\tgoto bad;\n\tu.u_error = 0;\n\t...\n\tps =& ~EBIT;\n\tcallp = &sysent[fuword(pc-2)&077];\n\tif (callp == sysent) { /* indirect */\n\t\ta = fuword(pc);\n\t\tpc =+ 2;\n\t\tcallp = &sysent[fuword(a)&077];\n\t\ta =+ 2;\n\t} else {\n\t\ta = pc;\n\t\tpc =+ callp->count*2;\n\t}\n\tfor(i=0; i < callp->count; i++) {\n\t\tu.u_arg[i] = fuword(a);\n\t\ta =+ 2;\n\t}\n\tu.u_dirp = u.u_arg[0];\n\ttrap1(callp->call);"
+    },
+    "signal": {
+      "file": "sig.c",
+      "description": "Send signal to processes on terminal",
+      "startLine": 15,
+      "code": "signal(tp, sig)\n{\n\tregister struct proc *p;\n\n\tfor(p = &proc[0]; p < &proc[NPROC]; p++)\n\t\tif(p->p_ttyp==tp)\n\t\t\tpsignal(p, sig);\n}\n\npsignal(p, sig)\nint *p;\n{\n\tregister *rp;\n\n\trp = p;\n\trp->p_sig = sig;\n\tif(rp->p_stat == SWAIT) {\n\t\trp->p_wchan = 0;\n\t\trp->p_stat = SRUN;\n\t\tif(runout) {\n\t\t\trunout = 0;\n\t\t\twakeup(&runout);\n\t\t}\n\t}\n}"
+    }
+  },
+  "special": {
+    "famous_comment": {
+      "file": "slp.c",
+      "description": "The famous 'You are not expected to understand this' comment",
+      "startLine": 195,
+      "context": "Found in the swtch() function. This comment became legendary in computer science, appearing in various discussions about code complexity and documentation.",
+      "note": "In the actual Unix V4 source, this exact comment doesn't appear - it was added in Unix V6. However, the swtch() function in V4 contains the complex context-switching logic that later versions felt needed this explanation."
+    }
+  },
+  "shell": {
+    "main": {
+      "file": "sh.c",
+      "description": "Shell main loop",
+      "startLine": 72,
+      "code": "main(c, av)\nint c;\nchar **av;\n{\n\tregister f;\n\tregister char *acname, **v;\n\n\tclose(2);\n\tif((f=dup(1)) != 2)\n\t\tclose(f);\n\tv = av;\n\tacname = \"/usr/adm/sh_acct\";\n\tpromp = \"% \";\n\tif(((uid = getuid())&0377) == 0) {\n\t\tpromp = \"# \";\n\t\tacname = \"/usr/adm/su_acct\";\n\t}\n\tacctf = open(acname, 1);\n\t...\nloop:\n\tif(promp != 0)\n\t\tprs(promp);\n\tpeekc = getc();\n\tmain1();\n\tgoto loop;\n}"
+    },
+    "execute": {
+      "file": "sh.c",
+      "description": "Shell command execution",
+      "startLine": 530,
+      "code": "execute(t, pf1, pf2)\nint *t, *pf1, *pf2;\n{\n\tint i, f, pv[2];\n\tregister *t1;\n\tregister char *cp1, *cp2;\n\textern errno;\n\n\tif(t != 0)\n\tswitch(t[dtyp]) {\n\n\tcase tcom:\n\t\tcp1 = t[dcom];\n\t\tif(equal(cp1, \"chdir\")) {\n\t\t\tif(t[dcom+1] != 0) {\n\t\t\t\tif(chdir(t[dcom+1]) < 0)\n\t\t\t\t\terr(\"chdir: bad directory\");\n\t\t\t} else\n\t\t\t\terr(\"chdir: arg count\");\n\t\t\treturn;\n\t\t}"
+    }
+  },
+  "metadata": {
+    "copyright": "Copyright 1973 Bell Telephone Laboratories Inc",
+    "version": "Unix Version 4",
+    "note": "All source code is historical Unix V4 code from 1973"
+  }
+}

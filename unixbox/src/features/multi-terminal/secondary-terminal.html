@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UnixBox - TTY</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><text y='75' x='50' text-anchor='middle' font-size='80' fill='%2300ff00' font-family='monospace'>$</text></svg>">
+  <link rel="stylesheet" href="/node_modules/xterm/css/xterm.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #000;
+      color: #00ff00;
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    header {
+      background: #001a00;
+      border-bottom: 2px solid #00ff00;
+      padding: 1rem 2rem;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+      animation: flicker 3s infinite alternate;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.95; }
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #00cc00;
+      margin-top: 0.25rem;
+      opacity: 0.8;
+    }
+
+    #terminal-container {
+      flex: 1;
+      padding: 1rem;
+      background: #001100;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* CRT screen effect */
+    #terminal-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%,
+        rgba(0, 0, 0, 0.25) 50%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* CRT glow */
+    #terminal-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(0, 255, 0, 0.1) 0%,
+        transparent 70%
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #terminal {
+      position: relative;
+      z-index: 3;
+      height: 100%;
+    }
+
+    /* xterm.js overrides for retro look */
+    .xterm {
+      height: 100%;
+      padding: 10px;
+    }
+
+    .xterm-viewport {
+      background-color: transparent !important;
+    }
+
+    .xterm-screen {
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    }
+
+    /* Status bar */
+    #status-bar {
+      background: #001a00;
+      border-top: 2px solid #00ff00;
+      padding: 0.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-label {
+      color: #00cc00;
+      opacity: 0.8;
+    }
+
+    .status-value {
+      color: #00ff00;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    .status-indicator.disconnected {
+      background: #ff3300;
+      box-shadow: 0 0 10px rgba(255, 51, 0, 0.8);
+      animation: none;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    #connection-status {
+      padding: 0.5rem 1rem;
+      background: rgba(255, 153, 0, 0.2);
+      border: 1px solid #ff9900;
+      border-radius: 4px;
+      margin: 1rem;
+      display: none;
+    }
+
+    #connection-status.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1 id="terminal-title">UnixBox - TTY?</h1>
+      <div class="subtitle">Secondary Terminal - Connected to PDP-11/40</div>
+    </header>
+    <div id="terminal-container">
+      <div id="connection-status">Waiting for connection to primary tab...</div>
+      <div id="terminal"></div>
+    </div>
+    <div id="status-bar">
+      <div class="status-item">
+        <span class="status-indicator" id="connection-indicator"></span>
+        <span class="status-label">Connection:</span>
+        <span class="status-value" id="connection-state">CONNECTING</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">TTY:</span>
+        <span class="status-value" id="tty-unit">?</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Type:</span>
+        <span class="status-value">VT52</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Terminal } from '/node_modules/xterm/lib/xterm.js';
+    import { FitAddon } from '/node_modules/xterm-addon-fit/lib/xterm-addon-fit.js';
+
+    // Parse URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const terminalUnit = parseInt(urlParams.get('unit') || '1', 10);
+
+    // Update title and status
+    document.getElementById('terminal-title').textContent = `UnixBox - TTY${terminalUnit}`;
+    document.getElementById('tty-unit').textContent = `TTY${terminalUnit}`;
+    document.title = `UnixBox - TTY${terminalUnit}`;
+
+    // Initialize terminal
+    const terminal = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: '"Courier New", Courier, monospace',
+      theme: {
+        background: '#001100',
+        foreground: '#00ff00',
+        cursor: '#00ff00',
+        cursorAccent: '#001100',
+        selectionBackground: 'rgba(0, 255, 0, 0.3)',
+        black: '#000000',
+        red: '#ff0000',
+        green: '#00ff00',
+        yellow: '#ffff00',
+        blue: '#0000ff',
+        magenta: '#ff00ff',
+        cyan: '#00ffff',
+        white: '#ffffff',
+        brightBlack: '#666666',
+        brightRed: '#ff6666',
+        brightGreen: '#66ff66',
+        brightYellow: '#ffff66',
+        brightBlue: '#6666ff',
+        brightMagenta: '#ff66ff',
+        brightCyan: '#66ffff',
+        brightWhite: '#ffffff',
+      },
+      cols: 80,
+      rows: 24,
+      allowProposedApi: true,
+    });
+
+    // Add fit addon
+    const fitAddon = new FitAddon();
+    terminal.loadAddon(fitAddon);
+
+    // Mount terminal to DOM
+    const terminalElement = document.getElementById('terminal');
+    if (terminalElement) {
+      terminal.open(terminalElement);
+      fitAddon.fit();
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      fitAddon.fit();
+    });
+
+    // BroadcastChannel for communication with primary tab
+    const channel = new BroadcastChannel('unixbox-terminal-sync');
+    const tabId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    let isConnected = false;
+
+    // Update connection status
+    function updateConnectionStatus(connected) {
+      isConnected = connected;
+      const indicator = document.getElementById('connection-indicator');
+      const statusEl = document.getElementById('connection-state');
+      const connectionStatus = document.getElementById('connection-status');
+
+      if (connected) {
+        indicator.classList.remove('disconnected');
+        statusEl.textContent = 'CONNECTED';
+        connectionStatus.classList.remove('show');
+      } else {
+        indicator.classList.add('disconnected');
+        statusEl.textContent = 'DISCONNECTED';
+        connectionStatus.classList.add('show');
+      }
+    }
+
+    // Handle messages from primary tab
+    channel.addEventListener('message', (event) => {
+      const msg = event.data;
+
+      // Ignore our own messages
+      if (msg.tabId === tabId) {
+        return;
+      }
+
+      switch (msg.type) {
+        case 'output':
+          // Receive output from primary tab
+          if (msg.unit === terminalUnit && msg.data) {
+            terminal.write(msg.data);
+
+            // Mark as connected if we receive data
+            if (!isConnected) {
+              updateConnectionStatus(true);
+            }
+          }
+          break;
+
+        case 'pong':
+          // Primary responded to our ping
+          if (msg.unit === terminalUnit || msg.unit === -1) {
+            console.log('[SecondaryTerminal] Received pong from primary');
+            if (!isConnected) {
+              updateConnectionStatus(true);
+            }
+          }
+          break;
+      }
+    });
+
+    // Send input to primary tab
+    terminal.onData((data) => {
+      channel.postMessage({
+        type: 'input',
+        unit: terminalUnit,
+        data: data,
+        timestamp: Date.now(),
+        tabId: tabId
+      });
+    });
+
+    // Register this terminal
+    channel.postMessage({
+      type: 'register',
+      unit: terminalUnit,
+      timestamp: Date.now(),
+      tabId: tabId
+    });
+
+    // Ping primary to check connection
+    channel.postMessage({
+      type: 'ping',
+      unit: terminalUnit,
+      timestamp: Date.now(),
+      tabId: tabId
+    });
+
+    // Periodic ping to maintain connection
+    setInterval(() => {
+      channel.postMessage({
+        type: 'ping',
+        unit: terminalUnit,
+        timestamp: Date.now(),
+        tabId: tabId
+      });
+    }, 5000);
+
+    // Unregister on close
+    window.addEventListener('beforeunload', () => {
+      channel.postMessage({
+        type: 'unregister',
+        unit: terminalUnit,
+        timestamp: Date.now(),
+        tabId: tabId
+      });
+    });
+
+    // Show welcome message
+    terminal.writeln('\x1b[1;32m╔════════════════════════════════════════════════════════════════════════════╗\x1b[0m');
+    terminal.writeln('\x1b[1;32m║                          UnixBox Multi-Terminal                            ║\x1b[0m');
+    terminal.writeln('\x1b[1;32m║                          Secondary Terminal TTY' + terminalUnit.toString().padStart(1) + '                            ║\x1b[0m');
+    terminal.writeln('\x1b[1;32m╚════════════════════════════════════════════════════════════════════════════╝\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[33mWaiting for connection to primary tab...\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[90mThis terminal is connected to the PDP-11 emulator running in the primary tab.\x1b[0m');
+    terminal.writeln('\x1b[90mYou can login and work independently from other terminals.\x1b[0m');
+    terminal.writeln('');
+
+    // Connection timeout warning
+    setTimeout(() => {
+      if (!isConnected) {
+        terminal.writeln('\x1b[33m⚠ No connection to primary tab. Make sure the main UnixBox tab is open.\x1b[0m');
+      }
+    }, 3000);
+
+    console.log(`[SecondaryTerminal] Initialized TTY${terminalUnit}`);
+  </script>
+</body>
+</html>

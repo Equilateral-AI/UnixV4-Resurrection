@@ -1,0 +1,92 @@
+{
+  "syscalls": {
+    "1": {
+      "name": "exit",
+      "signature": "exit(status)",
+      "description": "Terminates the calling process and returns status to parent",
+      "implementation": "Ken Thompson's implementation in sys1.c performs critical cleanup: closes all open file descriptors, signals the parent process via wakeup(), marks process table entry as zombie (SZOMB), and invokes swtch() to yield the CPU permanently. The exit status is stored in p_arg[0] for retrieval by wait().",
+      "historicalNote": "The exit status convention (0 = success, non-zero = error) was established in this early Unix implementation and remains a fundamental Unix/POSIX standard today. The zombie state concept - where a process retains its exit status until the parent retrieves it - originated here.",
+      "codeSnippet": "/* From sys1.c */\nexit() {\n    register int *p;\n    for(p = &u.u_ofile[0]; p < &u.u_ofile[NOFILE]; p++)\n        if(*p != NULL) closef(*p);\n    p = getblk(NODEV);\n    p->b_flags =| B_WANTED;\n    p->b_addr = u.u_ar0[R0];\n    wakeup(u.u_procp->p_ppid);\n    u.u_procp->p_stat = SZOMB;\n    swtch();\n}"
+    },
+    "2": {
+      "name": "fork",
+      "signature": "int fork(void)",
+      "description": "Creates a new process by duplicating the calling process. The child process is an exact copy of the parent with its own address space. Returns 0 to child, child PID to parent, or -1 on error.",
+      "implementation": "The newproc() function in slp.c searches the proc[] table for an empty slot (p_stat == NULL), allocates it, then copies the entire parent's core image using the copy() function. File descriptors are duplicated by incrementing their reference counts. The magic happens in the return: the parent's registers are saved on the stack, the child's stack is set up identically, but R0 is cleared to 0, so when the child 'returns from newproc()', it sees 0 while the parent sees the child's PID.",
+      "historicalNote": "The fork/exec model from 1974 Unix V5 is still the foundation of process creation in modern Unix and Linux! Dennis Ritchie later called fork() 'the most remarkable invention' in Unix. The elegant simplicity of fork returning twice (once in parent, once in child) influenced generations of operating systems. Before fork, process creation required complex parameter passing to specify the new program.",
+      "codeSnippet": "/* From slp.c - newproc() */\nfor(rpp = &proc[0]; rpp < &proc[NPROC]; rpp++)\n    if(rpp->p_stat == NULL)\n        goto found;\n/* ... allocate proc slot ... */\nfound:\n    rpp->p_stat = SRUN;\n    rpp->p_flag = SLOAD;\n    rpp->p_uid = rip->p_uid;\n    /* Copy parent's core image */\n    n = rip->p_size;\n    copy(n);\n    /* Child returns with R0=0, parent gets child PID */\n    rip->p_stat = SRUN;\n    return(rpp);"
+    },
+    "3": {
+      "name": "read",
+      "signature": "int read(int fd, char *buf, int count)",
+      "description": "Reads up to count bytes from file descriptor fd into buffer buf. Returns the number of bytes actually read, 0 on EOF, or -1 on error.",
+      "implementation": "In sys2.c, read() validates the file descriptor via getf(), then calls the device-specific read routine via cdevsw[] for character devices or uses the buffer cache via readi() for block devices and regular files. The buffer cache implements read-ahead optimization. For pipes, rdwr() handles the circular buffer logic with sleep/wakeup synchronization.",
+      "historicalNote": "Unix V5's read() introduced the revolutionary concept of 'everything is a file' - the same system call works for disk files, terminals, tape drives, and pipes. This uniform I/O interface was a major departure from earlier systems with device-specific I/O routines. The byte stream abstraction (no record boundaries) was radical in 1974.",
+      "codeSnippet": "/* From sys2.c */\nread() {\n    rdwr(FREAD);\n}\n\nrdwr(mode) {\n    register *fp, m;\n    fp = getf(u.u_ar0[R0]);\n    if(fp == NULL) return;\n    m = mode;\n    if((fp->f_flag&m) == 0) {\n        u.u_error = EBADF;\n        return;\n    }\n    u.u_base = u.u_arg[0];\n    u.u_count = u.u_arg[1];\n    if(m == FREAD)\n        readi(fp->f_inode);\n    else\n        writei(fp->f_inode);\n}"
+    },
+    "4": {
+      "name": "write",
+      "signature": "int write(int fd, const char *buf, int count)",
+      "description": "Writes up to count bytes from buffer buf to file descriptor fd. Returns the number of bytes actually written, or -1 on error.",
+      "implementation": "Like read(), write() in sys2.c validates the file descriptor and dispatches to the appropriate device driver via cdevsw[] or block I/O via writei(). The buffer cache delays actual disk writes for performance. For terminals, the character output queues (clist structures) handle flow control. Pipes use sleep/wakeup to block when full.",
+      "historicalNote": "Write's symmetry with read() reinforced the Unix philosophy of simple, composable tools. The decision to make write() return the number of bytes written (allowing partial writes) rather than just success/failure was prescient - it elegantly handles device buffer limitations and signals. This API survived unchanged into POSIX.",
+      "codeSnippet": "/* From sys2.c */\nwrite() {\n    rdwr(FWRITE);\n}\n\nwritei(aip) {\n    register *ip, *bp;\n    int lbn, bn, n;\n    ip = aip;\n    /* ... loop through blocks ... */\n    do {\n        lbn = u.u_offset >> 9; /* logical block */\n        bn = bmap(ip, lbn); /* get physical block */\n        bp = getblk(ip->i_dev, bn);\n        n = min(512 - (u.u_offset & 0777), u.u_count);\n        iomove(bp->b_addr, n, B_WRITE);\n        bwrite(bp);\n    } while(u.u_error == 0 && u.u_count != 0);\n}"
+    },
+    "5": {
+      "name": "open",
+      "signature": "int open(const char *path, int flags)",
+      "description": "Opens a file for reading or writing and returns a file descriptor. Flags include 0 (read-only), 1 (write-only), 2 (read-write). Returns -1 on error.",
+      "implementation": "The open() syscall in sys2.c performs path traversal via namei() to find the inode, allocates a file table entry via falloc(), and returns the lowest available file descriptor. Access permissions are checked against the inode's mode bits. For character devices, the device open routine is called. The file offset is initialized to 0 (or end-of-file for append mode in later versions).",
+      "historicalNote": "Unix V5's open() merged what many systems did in separate 'allocate' and 'connect' operations. The file descriptor abstraction - an integer index rather than a memory address - enabled safe system call interfaces and simplified I/O redirection. The decision to return the lowest available fd made shell I/O redirection elegant: close(0), open(file) automatically redirects stdin.",
+      "codeSnippet": "/* From sys2.c */\nopen() {\n    register *ip;\n    extern uchar;\n    ip = namei(&uchar, 0);\n    if(ip == NULL) return;\n    u.u_arg[1]++;\n    open1(ip, u.u_arg[1], 0);\n}\n\nopen1(ip, mode, trf) {\n    register *fp, *rip;\n    rip = ip;\n    if(trf != 2) {\n        if(mode&FREAD)\n            access(rip, IREAD);\n        if(mode&FWRITE) {\n            access(rip, IWRITE);\n            if((rip->i_mode&IFMT) == IFDIR)\n                u.u_error = EISDIR;\n        }\n    }\n    fp = falloc();\n    fp->f_flag = mode&(FREAD|FWRITE);\n    fp->f_inode = rip;\n    openi(rip, mode&FWRITE);\n}"
+    },
+    "6": {
+      "name": "close",
+      "signature": "int close(int fd)",
+      "description": "Closes a file descriptor, freeing the associated resources. Returns 0 on success, -1 on error.",
+      "implementation": "The close() implementation in sys2.c validates the file descriptor, then calls closef() which decrements the file table reference count (multiple fds can point to the same file table entry after dup/fork). When the reference count reaches zero, the inode reference is released via iput(). For character devices, the driver's close routine is invoked. Pipe closure may trigger SIGPIPE for the other end.",
+      "historicalNote": "The reference counting mechanism in close() was essential for Unix's process model. After fork(), parent and child share file table entries, so closing in one process shouldn't affect the other. This design enabled elegant patterns like pipelines: the shell closes unused pipe ends, automatically sending EOF to readers when the last writer closes.",
+      "codeSnippet": "/* From sys2.c */\nclose() {\n    register *fp;\n    fp = getf(u.u_arg[0]);\n    if(fp == NULL) return;\n    u.u_ofile[u.u_arg[0]] = NULL;\n    closef(fp);\n}\n\nclosef(fp) {\n    register *rfp, *ip;\n    rfp = fp;\n    if(rfp->f_flag&FPIPE) {\n        ip = rfp->f_inode;\n        ip->i_mode =& ~(IREAD|IWRITE);\n        wakeup(ip+1);\n        wakeup(ip+2);\n    }\n    if(--rfp->f_count == 0) {\n        iput(rfp->f_inode);\n    }\n}"
+    },
+    "7": {
+      "name": "wait",
+      "signature": "int wait(int *status)",
+      "description": "Waits for a child process to terminate. Returns the child's PID and stores its exit status in *status. Returns -1 if no children exist.",
+      "implementation": "The wait() syscall in sys1.c scans the process table for zombie children (p_stat == SZOMB) of the calling process. If found, it retrieves the exit status from the child's p_arg[0], frees the process slot, and returns the child's PID. If no zombie exists but living children exist, the parent sleeps on its own address until a child exits and wakes it via wakeup(). No children at all returns error.",
+      "historicalNote": "The wait/zombie mechanism solved a fundamental problem in concurrent systems: how does a parent retrieve a child's exit status without blocking before the child exits, yet without losing the status if the child exits first? The zombie state - a minimal process table entry retained after death - was an elegant solution that became standard in all Unix-like systems.",
+      "codeSnippet": "/* From sys1.c */\nwait() {\n    register *p, n;\nloop:\n    n = 0;\n    for(p = &proc[0]; p < &proc[NPROC]; p++) {\n        if(p->p_ppid == u.u_procp->p_pid) {\n            n++;\n            if(p->p_stat == SZOMB) {\n                u.u_ar0[R0] = p->p_pid;\n                if(u.u_arg[0] != 0)\n                    suword(u.u_arg[0], p->p_arg[0]);\n                p->p_stat = NULL;\n                return;\n            }\n        }\n    }\n    if(n == 0) { u.u_error = ECHILD; return; }\n    sleep(u.u_procp, PWAIT);\n    goto loop;\n}"
+    },
+    "11": {
+      "name": "exec",
+      "signature": "int exec(const char *path, char *const argv[])",
+      "description": "Replaces the current process image with a new program loaded from path. Arguments are passed via argv array. Returns only on error (-1).",
+      "implementation": "The exec() implementation in sys1.c is complex: it reads the a.out header to determine text and data sizes, allocates new memory, loads the text and data segments from the file, sets up the argument and environment pointers on the new stack, releases the old memory, and finally adjusts the program counter to the entry point. File descriptors remain open (unless close-on-exec is set). The process PID, parent, and priority are unchanged.",
+      "historicalNote": "The separation of fork() and exec() into two syscalls (rather than a combined spawn()) was a stroke of genius. Between fork and exec, the child can manipulate file descriptors for I/O redirection, change directory, adjust signals, etc. - all without special parameters to a spawn call. This made the Unix shell remarkably simple and enabled powerful I/O redirection and pipelines with minimal code.",
+      "codeSnippet": "/* From sys1.c - simplified */\nexec() {\n    /* namei() finds the executable */\n    ip = namei(&uchar, 0);\n    /* Read a.out header */\n    u.u_base = &u.u_arg[0];\n    u.u_count = sizeof(u.u_arg);\n    readi(ip);\n    /* Get text and data sizes */\n    ts = ((u.u_arg[1]+63)>>6) & 01777;\n    ds = ((u.u_arg[2]+u.u_arg[3]+63)>>6) & 01777;\n    /* Allocate new memory */\n    xalloc(ip);\n    /* Load program segments */\n    u.u_base = 0;\n    u.u_count = u.u_arg[1];\n    readi(ip); /* read text */\n    /* Copy arguments to new stack */\n    /* Jump to entry point */\n}"
+    },
+    "17": {
+      "name": "break",
+      "signature": "int brk(void *addr)",
+      "description": "Changes the program's data segment size (heap) to the specified address. Used for dynamic memory allocation. Returns 0 on success, -1 on error.",
+      "implementation": "In sys1.c, the break() syscall (often called brk or sbrk) adjusts the process's p_size field to expand or shrink the data segment. It validates that the new size doesn't collide with the stack or exceed available memory. Physical memory pages are allocated or freed as needed. This is the foundation primitive that malloc() in libc uses to obtain memory from the kernel.",
+      "historicalNote": "The brk/sbrk interface predates malloc and represents the raw kernel mechanism for heap management. Early Unix programmers often called brk directly. The name 'break' comes from the Multics system and refers to the break between the data segment and unused memory. Modern systems still support brk for compatibility, though mmap() has largely superseded it for large allocations.",
+      "codeSnippet": "/* From sys1.c */\nbreak() {\n    register a, n, d;\n    a = u.u_ar0[R0];\n    n = (a+63)>>6;\n    if(n < 0) {\n        u.u_error = ENOMEM;\n        return;\n    }\n    d = n - u.u_procp->p_size;\n    if(d > 0) {\n        /* Expand: allocate more memory */\n        expand(d);\n    } else if(d < 0) {\n        /* Shrink: free memory */\n        n = u.u_procp->p_size + d;\n        n = max(n, 8); /* minimum size */\n        u.u_procp->p_size = n;\n    }\n}"
+    },
+    "19": {
+      "name": "seek",
+      "signature": "off_t lseek(int fd, off_t offset, int whence)",
+      "description": "Repositions the file offset for file descriptor fd. The whence parameter specifies the reference point: 0 (absolute), 1 (relative to current), 2 (relative to end). Returns the new offset or -1 on error.",
+      "implementation": "The seek() implementation in sys2.c validates the file descriptor via getf(), then adjusts the f_offset field in the file table entry based on the whence parameter. For absolute seeks (whence=0), offset becomes f_offset. For relative (whence=1), offset is added to current f_offset. For end-relative (whence=2), offset is added to the inode's i_size. Seeking past EOF is allowed and creates a sparse file on subsequent write.",
+      "historicalNote": "The three-way seek (absolute, relative, end-relative) became the standard for all Unix I/O. The decision to allow seeking past EOF and create 'holes' in files was elegant - reads from holes return zeros, but no disk blocks are allocated until actual writes. This enabled efficient sparse files like core dumps and database files. The off_t type (a long offset) was introduced to support files larger than 16 bits could address.",
+      "codeSnippet": "/* From sys2.c */\nseek() {\n    register *fp, n[2];\n    fp = getf(u.u_ar0[R0]);\n    if(fp == NULL) return;\n    n[1] = u.u_arg[0]; /* offset low */\n    n[0] = u.u_arg[1]; /* offset high */\n    switch(u.u_arg[2]) {\n    case 0: /* absolute */\n        fp->f_offset[1] = n[1];\n        fp->f_offset[0] = n[0];\n        break;\n    case 1: /* relative */\n        fp->f_offset[1] =+ n[1];\n        fp->f_offset[0] =+ n[0];\n        break;\n    case 2: /* from end */\n        fp->f_offset[1] = n[1] + fp->f_inode->i_size1;\n        fp->f_offset[0] = n[0] + fp->f_inode->i_size0;\n    }\n}"
+    },
+    "42": {
+      "name": "pipe",
+      "signature": "int pipe(int pipefd[2])",
+      "description": "Creates a unidirectional inter-process communication channel. Returns two file descriptors in pipefd[]: pipefd[0] for reading, pipefd[1] for writing. Data written to pipefd[1] can be read from pipefd[0]. Returns 0 on success, -1 on error.",
+      "implementation": "In sys2.c, pipe() allocates an inode to store the pipe buffer (512 bytes in the inode's disk block), then creates two file table entries pointing to it - one with FREAD|FPIPE flags, one with FWRITE|FPIPE. The rdwr() function handles pipe I/O using a circular buffer with read/write pointers. When the pipe is full, writers sleep on ip+1; when empty, readers sleep on ip+2. Closing the write end wakes readers with EOF; closing read end may send SIGPIPE to writers.",
+      "historicalNote": "Pipes were THE killer feature that made Unix revolutionary. Doug McIlroy proposed them in 1964, but they weren't implemented until 1972. The ability to connect programs with 'ls | grep | sort' fundamentally changed how people thought about software composition. The Unix pipeline model influenced everything from shell scripting to modern stream processing frameworks. Thompson later said that pipes 'redefined the structure of operating systems'.",
+      "codeSnippet": "/* From sys2.c */\npipe() {\n    register *ip, *rf, *wf;\n    ip = ialloc(rootdev);\n    rf = falloc();\n    wf = falloc();\n    rf->f_flag = FREAD|FPIPE;\n    rf->f_inode = ip;\n    wf->f_flag = FWRITE|FPIPE;\n    wf->f_inode = ip;\n    u.u_ar0[R0] = rf - file; /* read fd */\n    u.u_ar0[R1] = wf - file; /* write fd */\n    ip->i_count = 2;\n    ip->i_flag = IACC|IUPD;\n    ip->i_mode = IALLOC;\n}\n\n/* Pipe I/O uses circular buffer */\nif(fp->f_flag&FPIPE) {\n    if(mode == FREAD) {\n        while(ip->i_size1 == 0) {\n            if(ip->i_count < 2) return;\n            sleep(ip+2, PPIPE);\n        }\n    }\n}"
+    }
+  }
+}

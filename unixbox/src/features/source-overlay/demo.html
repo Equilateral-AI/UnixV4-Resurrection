@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnixBox Source Overlay Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00ff00;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 10px;
+        }
+
+        .controls {
+            background: #000;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #003300;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        button:active {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .info {
+            background: #001100;
+            border: 1px solid #003300;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .section-title {
+            color: #00ffaa;
+            font-weight: bold;
+            margin: 15px 0 10px 0;
+            font-size: 16px;
+        }
+
+        .terminal-output {
+            background: #000;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .terminal-output::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .terminal-output::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: #00ff00;
+        }
+
+        kbd {
+            background: #003300;
+            border: 1px solid #00ff00;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .copyright {
+            text-align: center;
+            color: #00aa00;
+            font-size: 11px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #003300;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>UnixBox Source Overlay - Demo</h1>
+
+        <div class="info">
+            <strong>Welcome to the Unix V4 Source Code Overlay Demo</strong><br>
+            This feature displays authentic 1973 Unix Version 4 source code from Bell Labs.
+            Click the buttons below to explore different system calls and kernel functions.
+        </div>
+
+        <div class="controls">
+            <div class="section-title">System Calls - Process Management</div>
+            <div class="button-group">
+                <button onclick="showSource('fork')">fork()</button>
+                <button onclick="showSource('exec')">exec()</button>
+                <button onclick="showSource('exit')">exit()</button>
+                <button onclick="showSource('wait')">wait()</button>
+            </div>
+
+            <div class="section-title">System Calls - File I/O</div>
+            <div class="button-group">
+                <button onclick="showSource('read')">read()</button>
+                <button onclick="showSource('write')">write()</button>
+                <button onclick="showSource('open')">open()</button>
+                <button onclick="showSource('close')">close()</button>
+                <button onclick="showSource('creat')">creat()</button>
+            </div>
+
+            <div class="section-title">Kernel Functions</div>
+            <div class="button-group">
+                <button onclick="showSource('swtch')">swtch() - Context Switch</button>
+                <button onclick="showSource('sleep')">sleep()</button>
+                <button onclick="showSource('wakeup')">wakeup()</button>
+                <button onclick="showSource('trap')">trap() - Syscall Handler</button>
+                <button onclick="showSource('pipe')">pipe()</button>
+                <button onclick="showSource('signal')">signal()</button>
+            </div>
+
+            <div class="section-title">Shell</div>
+            <div class="button-group">
+                <button onclick="showSource('main')">Shell Main Loop</button>
+                <button onclick="showSource('execute')">Command Execution</button>
+            </div>
+
+            <div class="section-title">Special Features</div>
+            <div class="button-group">
+                <button onclick="showFamousComment()">Show Famous Comment</button>
+                <button onclick="searchDemo()">Search Demo</button>
+                <button onclick="listAllSyscalls()">List All Syscalls</button>
+                <button onclick="togglePanel()">Toggle Panel</button>
+            </div>
+
+            <div class="section-title">Keyboard Shortcuts</div>
+            <div class="info">
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> - Toggle source panel<br>
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> - Show fork() source<br>
+                <kbd>Escape</kbd> - Hide panel
+            </div>
+        </div>
+
+        <div class="terminal-output" id="output">
+            <div>$ Demo loaded. Click buttons above to view Unix V4 source code.</div>
+            <div>$ Use keyboard shortcuts for quick access.</div>
+            <div>$ The source panel is draggable - grab the header to move it.</div>
+        </div>
+
+        <div class="copyright">
+            Unix Version 4 Source Code &copy; 1973 Bell Telephone Laboratories Inc<br>
+            Source Overlay Feature - UnixBox Educational Project
+        </div>
+    </div>
+
+    <script type="module">
+        // Note: This is a standalone demo
+        // In the actual UnixBox integration, these imports would be from the compiled modules
+
+        import sourceIndexData from './source-index.json' assert { type: 'json' };
+
+        // Simplified inline version for demo purposes
+        class SimpleSourceOverlay {
+            constructor(data) {
+                this.data = data;
+            }
+
+            getSourceForSyscall(name) {
+                const normalized = name.replace(/^sys_/, '').toLowerCase();
+                return this.data.syscalls[normalized] ||
+                       this.data.shell[normalized] ||
+                       null;
+            }
+
+            getAvailableSyscalls() {
+                return [
+                    ...Object.keys(this.data.syscalls),
+                    ...Object.keys(this.data.shell)
+                ];
+            }
+
+            searchSource(keyword) {
+                const results = [];
+                const lower = keyword.toLowerCase();
+
+                Object.entries(this.data.syscalls).forEach(([name, entry]) => {
+                    if (name.includes(lower) ||
+                        entry.description.toLowerCase().includes(lower) ||
+                        entry.code.toLowerCase().includes(lower)) {
+                        results.push({ name, ...entry });
+                    }
+                });
+
+                return results;
+            }
+
+            getFamousComment() {
+                return this.data.special.famous_comment;
+            }
+        }
+
+        // Initialize
+        const overlay = new SimpleSourceOverlay(sourceIndexData);
+        let panel = null;
+
+        // Create simple panel
+        function createPanel() {
+            if (panel) return panel;
+
+            panel = document.createElement('div');
+            panel.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                width: 650px;
+                height: 550px;
+                background: #000;
+                border: 2px solid #0f0;
+                color: #0f0;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                z-index: 10000;
+                display: none;
+                flex-direction: column;
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+                resize: both;
+                overflow: hidden;
+            `;
+
+            const header = document.createElement('div');
+            header.style.cssText = `
+                padding: 10px;
+                background: #003300;
+                border-bottom: 1px solid #0f0;
+                display: flex;
+                justify-content: space-between;
+                cursor: move;
+                user-select: none;
+            `;
+            header.innerHTML = '<div>UNIX V4 SOURCE CODE</div><button style="background:#000;border:1px solid #0f0;color:#0f0;cursor:pointer;padding:0 8px;" onclick="window.hidePanel()">×</button>';
+
+            const meta = document.createElement('div');
+            meta.style.cssText = `
+                padding: 8px 10px;
+                background: #001100;
+                border-bottom: 1px solid #003300;
+                font-size: 11px;
+            `;
+            meta.id = 'panel-meta';
+
+            const code = document.createElement('pre');
+            code.style.cssText = `
+                flex: 1;
+                margin: 0;
+                padding: 15px;
+                overflow: auto;
+                white-space: pre;
+                line-height: 1.5;
+            `;
+            code.id = 'panel-code';
+
+            panel.appendChild(header);
+            panel.appendChild(meta);
+            panel.appendChild(code);
+            document.body.appendChild(panel);
+
+            // Make draggable
+            let isDragging = false;
+            let currentX, currentY, initialX, initialY;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                initialX = e.clientX - currentX || 0;
+                initialY = e.clientY - currentY || 0;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    panel.style.left = currentX + 'px';
+                    panel.style.top = currentY + 'px';
+                    panel.style.right = 'auto';
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            return panel;
+        }
+
+        // Show source
+        window.showSource = function(name) {
+            const source = overlay.getSourceForSyscall(name);
+            if (!source) {
+                log(`Source not found for: ${name}`);
+                return;
+            }
+
+            const p = createPanel();
+            const meta = document.getElementById('panel-meta');
+            const code = document.getElementById('panel-code');
+
+            meta.innerHTML = `
+                <div style="color:#0fa;font-weight:bold;">File: ${source.file} (line ${source.startLine})</div>
+                <div style="color:#0a0;margin-top:4px;">${source.description}</div>
+                ${source.note ? `<div style="color:#fa0;margin-top:4px;font-style:italic;">Note: ${source.note}</div>` : ''}
+            `;
+
+            code.textContent = source.code;
+            p.style.display = 'flex';
+
+            log(`Showing source: ${name}() from ${source.file}`);
+        };
+
+        window.showFamousComment = function() {
+            const comment = overlay.getFamousComment();
+            log('Famous Comment Info:');
+            log(`  File: ${comment.file}`);
+            log(`  Context: ${comment.context}`);
+            showSource('swtch');
+        };
+
+        window.searchDemo = function() {
+            const results = overlay.searchSource('pipe');
+            log(`Search results for "pipe": ${results.length} matches`);
+            results.forEach((r, i) => {
+                log(`  ${i + 1}. ${r.name}() in ${r.file}`);
+            });
+            if (results.length > 0) {
+                showSource(results[0].name);
+            }
+        };
+
+        window.listAllSyscalls = function() {
+            const syscalls = overlay.getAvailableSyscalls();
+            log(`Available syscalls (${syscalls.length} total):`);
+            syscalls.forEach(name => {
+                log(`  - ${name}()`);
+            });
+        };
+
+        window.togglePanel = function() {
+            const p = createPanel();
+            p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+        };
+
+        window.hidePanel = function() {
+            if (panel) {
+                panel.style.display = 'none';
+            }
+        };
+
+        function log(message) {
+            const output = document.getElementById('output');
+            const line = document.createElement('div');
+            line.textContent = '$ ' + message;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                togglePanel();
+            }
+            if (e.ctrlKey && e.shiftKey && e.key === 'F') {
+                e.preventDefault();
+                showSource('fork');
+            }
+            if (e.key === 'Escape' && panel && panel.style.display !== 'none') {
+                e.preventDefault();
+                hidePanel();
+            }
+        });
+
+        log('Demo initialized. Ready for input.');
+    </script>
+</body>
+</html>

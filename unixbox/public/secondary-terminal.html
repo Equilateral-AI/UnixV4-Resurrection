@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UnixBox - Secondary Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000800;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #001a00 0%, #002200 100%);
+      border-bottom: 2px solid #00ff00;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0, 255, 0, 0.3);
+    }
+
+    .header h1 {
+      font-size: 1rem;
+      color: #00ff00;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    .header .unit-badge {
+      background: #003300;
+      border: 1px solid #00ff00;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    .header .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #666;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.connected {
+      background: #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    #terminal-container {
+      flex: 1;
+      padding: 0.5rem;
+      background: #000800;
+    }
+
+    #terminal {
+      height: 100%;
+      width: 100%;
+    }
+
+    .footer {
+      background: #001100;
+      border-top: 1px solid #004400;
+      padding: 0.25rem 1rem;
+      font-size: 0.75rem;
+      color: #006600;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>UnixBox Secondary Terminal</h1>
+    <span class="unit-badge" id="unit-display">TTY?</span>
+    <div class="status">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Connecting...</span>
+    </div>
+  </div>
+
+  <div id="terminal-container">
+    <div id="terminal"></div>
+  </div>
+
+  <div class="footer">
+    <span>Press Ctrl+W to close</span>
+    <span id="sync-status">BroadcastChannel: initializing</span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script>
+    // Parse unit from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const unit = parseInt(urlParams.get('unit') || '1', 10);
+
+    // Update UI
+    document.getElementById('unit-display').textContent = `TTY${unit}`;
+    document.title = `UnixBox - TTY${unit}`;
+
+    // Initialize terminal
+    const terminal = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: '"Courier New", Courier, monospace',
+      theme: {
+        background: '#001100',
+        foreground: '#00ff00',
+        cursor: '#00ff00',
+        cursorAccent: '#001100',
+        selectionBackground: 'rgba(0, 255, 0, 0.3)',
+      },
+      cols: 80,
+      rows: 24,
+      allowProposedApi: true,
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    terminal.loadAddon(fitAddon);
+
+    // Mount terminal
+    const terminalElement = document.getElementById('terminal');
+    terminal.open(terminalElement);
+    fitAddon.fit();
+
+    // Handle resize
+    window.addEventListener('resize', () => fitAddon.fit());
+
+    // TerminalSync (simplified inline version for secondary tabs)
+    class SecondaryTerminalSync {
+      constructor(unit) {
+        this.unit = unit;
+        this.tabId = `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        this.channel = new BroadcastChannel('unixbox-terminal-sync');
+        this.connected = false;
+
+        this.channel.addEventListener('message', this.handleMessage.bind(this));
+
+        // Register with primary
+        this.register();
+
+        console.log(`[SecondaryTerminalSync] Initialized for unit ${unit}`);
+      }
+
+      handleMessage(event) {
+        const msg = event.data;
+
+        // Ignore messages from self
+        if (msg.tabId === this.tabId) return;
+
+        switch (msg.type) {
+          case 'output':
+            // Receive output for our unit
+            if (msg.unit === this.unit && typeof msg.data === 'string') {
+              terminal.write(msg.data);
+            }
+            break;
+
+          case 'pong':
+            // Primary acknowledged us
+            if (msg.unit === this.unit) {
+              this.setConnected(true);
+            }
+            break;
+        }
+      }
+
+      sendMessage(msg) {
+        this.channel.postMessage(msg);
+      }
+
+      register() {
+        this.sendMessage({
+          type: 'register',
+          unit: this.unit,
+          tabId: this.tabId,
+          timestamp: Date.now()
+        });
+
+        // Also ping to get a pong
+        this.sendMessage({
+          type: 'ping',
+          unit: this.unit,
+          tabId: this.tabId,
+          timestamp: Date.now()
+        });
+      }
+
+      unregister() {
+        this.sendMessage({
+          type: 'unregister',
+          unit: this.unit,
+          tabId: this.tabId,
+          timestamp: Date.now()
+        });
+      }
+
+      sendInput(data) {
+        this.sendMessage({
+          type: 'input',
+          unit: this.unit,
+          data: data,
+          tabId: this.tabId,
+          timestamp: Date.now()
+        });
+      }
+
+      setConnected(connected) {
+        this.connected = connected;
+        const dot = document.getElementById('status-dot');
+        const text = document.getElementById('status-text');
+        const syncStatus = document.getElementById('sync-status');
+
+        if (connected) {
+          dot.classList.add('connected');
+          text.textContent = 'Connected';
+          syncStatus.textContent = 'BroadcastChannel: active';
+        } else {
+          dot.classList.remove('connected');
+          text.textContent = 'Disconnected';
+          syncStatus.textContent = 'BroadcastChannel: disconnected';
+        }
+      }
+
+      destroy() {
+        this.unregister();
+        this.channel.close();
+      }
+    }
+
+    // Initialize sync
+    const sync = new SecondaryTerminalSync(unit);
+
+    // Handle terminal input - send to primary
+    terminal.onData((data) => {
+      sync.sendInput(data);
+    });
+
+    // Clean up on close
+    window.addEventListener('beforeunload', () => {
+      sync.destroy();
+    });
+
+    // Welcome message
+    terminal.writeln('\x1b[1;32m╔════════════════════════════════════════════╗\x1b[0m');
+    terminal.writeln(`\x1b[1;32m║     UnixBox Secondary Terminal - TTY${unit}      ║\x1b[0m`);
+    terminal.writeln('\x1b[1;32m╠════════════════════════════════════════════╣\x1b[0m');
+    terminal.writeln('\x1b[1;32m║  Connected via BroadcastChannel to primary ║\x1b[0m');
+    terminal.writeln('\x1b[1;32m║  Input sent to PDP-11 emulator             ║\x1b[0m');
+    terminal.writeln('\x1b[1;32m║  Output received from VT52 unit            ║\x1b[0m');
+    terminal.writeln('\x1b[1;32m╚════════════════════════════════════════════╝\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[90mWaiting for connection to primary tab...\x1b[0m');
+    terminal.writeln('');
+
+    // Retry connection periodically
+    setInterval(() => {
+      if (!sync.connected) {
+        sync.register();
+      }
+    }, 2000);
+
+    console.log(`[UnixBox] Secondary terminal initialized for TTY${unit}`);
+  </script>
+</body>
+</html>
