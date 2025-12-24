@@ -1,6 +1,10 @@
 # Unix V4/V5 Resurrection Project
 
-**Status**: Analysis Complete - HIGHLY VIABLE for Modernization
+**A Christmas Gift from Agentic Santa - December 2024**
+
+Run Unix from 1974 in your browser. Experience computing history.
+
+**Status**: Complete - Web-based PDP-11 emulator with educational features
 
 ## What This Is
 
@@ -134,7 +138,70 @@ cat usr/source/s2/sh.c
 - [Lions' Commentary](https://en.wikipedia.org/wiki/Lions%27_Commentary_on_UNIX_6th_Edition) - Classic study of Unix V6
 - [The Evolution of Unix](https://www.bell-labs.com/usr/dmr/www/hist.html) - Dennis Ritchie's history
 
+## UnixBox: Browser-Based Experience
+
+The `unixbox/` directory contains a complete web-based Unix experience:
+
+```bash
+cd unixbox
+npm install
+npm run dev
+# Open http://localhost:5173
+```
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **PDP-11 Emulator** | Full CPU emulation in JavaScript |
+| **Time Machine** | Switch between Unix V4, V5, V6 eras |
+| **Multi-TTY** | Up to 8 terminals via BroadcastChannel |
+| **Syscall Annotations** | Real-time explanations of system calls |
+| **Source Overlay** | View original 1974 C source code |
+| **VT52 Terminal** | Authentic terminal emulation |
+
+### Quick Start
+
+1. Boot the emulator (automatic)
+2. Login as `root` (no password) or `dmr`
+3. Try classic commands: `ls`, `cat`, `who`, `ps`
+4. Click "+ New TTY" for multi-user experience
+5. Watch syscall annotations as you work
+
+### Educational Value
+
+When you run commands, you'll see:
+- The original 1974 C source code that handles your request
+- Explanations of syscalls like `fork()`, `exec()`, `pipe()`
+- The famous "You are not expected to understand this" comment
+
+---
+
+## Credits
+
+### Original Unix Authors (1969-1974)
+- **Ken Thompson** - Kernel, shell, many utilities
+- **Dennis Ritchie** - C language, device drivers, documentation
+
+### PDP-11 Emulator
+- **Paul Nankervis** (paulnank@hotmail.com)
+- JavaScript PDP-11 emulator used with attribution
+
+### UnixBox Web Interface
+- **Equilateral AI** (Pareidolia LLC)
+- Built with Claude Code - December 2024
+
+### Historical Preservation
+- **The Unix Heritage Society** (TUHS) - Archive maintenance
+- **Caldera International** - Open source licensing (2002)
+
+---
+
 ## License
 
-This source code is historic and is distributed under the [Caldera License](https://www.tuhs.org/Archive/Caldera-license.pdf)
-which permits open source distribution of ancient Unix code
+This project contains multiple components with different licenses.
+See [LICENSE](LICENSE) for complete details.
+
+- **Unix Source**: Caldera License (open source for ancient Unix)
+- **PDP-11 Emulator**: Free use with attribution (Paul Nankervis)
+- **UnixBox Interface**: MIT License (Equilateral AI)

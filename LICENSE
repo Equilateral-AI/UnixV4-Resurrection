@@ -1,0 +1,72 @@
+# License Information
+
+This project contains multiple components with different licenses:
+
+## 1. Unix V4/V5 Source Code (Caldera License)
+
+The original Unix source code (directories: bin/, etc/, lib/, usr/, unix) is
+distributed under the Caldera License, which permits open source distribution
+of ancient Unix code (versions 1-7 and 32V).
+
+See: https://www.tuhs.org/Archive/Caldera-license.pdf
+
+```
+Caldera International, Inc. hereby grants a fee free license that includes
+the rights use, modify and distribute this named source code, including
+creating derived binary products created from the source code. The source
+code for which Caldera International, Inc. grants rights are limited to
+the following UNIX Operating Systems that operate on the 16-Bit PDP-11
+CPU and early versions of the 32-Bit UNIX Operating System, with specific
+different binary and calculation methods for each system.
+```
+
+## 2. PDP-11 Emulator (Paul Nankervis)
+
+The PDP-11 emulator (unixbox/public/vendor/pdp11/) was written by Paul Nankervis.
+
+```
+Copyright (c) Paul Nankervis
+Email: paulnank@hotmail.com
+
+This code may be used freely provided the original author name is
+acknowledged in any modified source code.
+```
+
+## 3. UnixBox Web Interface (MIT License)
+
+The TypeScript web interface and educational features (unixbox/src/) are
+released under the MIT License.
+
+```
+MIT License
+
+Copyright (c) 2024 Equilateral AI (Pareidolia LLC)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## 4. Third-Party Dependencies
+
+- **xterm.js** - MIT License (https://github.com/xtermjs/xterm.js)
+- **Vite** - MIT License (https://github.com/vitejs/vite)
+- **TypeScript** - Apache 2.0 License (https://github.com/microsoft/TypeScript)
+
+---
+
+For questions about licensing, contact: hello@equilateral.ai
