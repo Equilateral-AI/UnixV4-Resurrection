@@ -224,9 +224,11 @@ The recovered Unix V4 tape image was in SIMH tape format, not a bootable disk. W
 
 | Era | Status | Notes |
 |-----|--------|-------|
-| **V4 (1973)** | Experimental | Tape converted to disk - may need kernel verification |
+| **V4 (1973)** | Experimental | Tape converted to disk - testing in progress |
 | **V5 (1974)** | Working | Primary experience, fully tested |
-| **V6 (1975)** | Working | Decompressed from vendor archive - Lions' Commentary era |
+| **V6 (1975)** | Placeholder | Using V5 image - need authentic V6 disk image |
+
+**Note**: The vendor's rk0.dsk was labeled as "Unix V5" in their documentation. A true V6 disk image from TUHS or other sources is needed for authentic V6 experience.
 
 ---
 
@@ -234,9 +236,11 @@ The recovered Unix V4 tape image was in SIMH tape format, not a bootable disk. W
 
 1. **V4 Boot Status**: The V4 disk image was created from tape extraction. The tape may contain utilities/source rather than a complete bootable system. Testing required.
 
-2. **Source Overlay**: Currently shows V5 source for all eras. Era-specific source mapping planned.
+2. **V6 Disk Image**: Currently using V5 disk image as placeholder. Need authentic V6 disk image from TUHS for true V6 experience.
 
-3. **Multi-TTY Sync**: Occasional desync between terminals. Refresh to resync.
+3. **Source Overlay**: Currently shows V5 source for all eras. Era-specific source mapping planned.
+
+4. **Multi-TTY Sync**: Occasional desync between terminals. Refresh to resync.
 
 ---
 
