@@ -201,25 +201,19 @@ export class PDP11Bridge {
     const originalFetch = window.fetch;
     const diskConfigs = this.diskConfigs;
 
-    // Log current disk configuration
-    console.log('[PDP11Bridge] Disk configs at patch time:', JSON.stringify(diskConfigs));
-
     // Intercept fetch for .zst files - return 404 quickly so it falls back to XHR
     (window as any).fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
       const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
-      console.log(`[PDP11Bridge] Fetch request: ${urlStr}`);
 
       // If this is a .zst disk image request, reject it so emulator falls back to XHR
       if (urlStr.match(/media\/rk\d+\.dsk\.zst$/)) {
-        console.log(`[PDP11Bridge] Rejecting .zst request (using uncompressed): ${urlStr}`);
         return Promise.resolve(new Response(null, { status: 404, statusText: 'Not Found' }));
       }
 
       return originalFetch.call(window, input, init);
     };
 
-    console.log('[PDP11Bridge] Installing XHR and fetch interceptors');
-
+    // Intercept XHR to redirect disk requests to configured URLs
     (window as any).XMLHttpRequest = function() {
       const xhr = new originalXHR();
       const originalOpen = xhr.open;
@@ -233,28 +227,19 @@ export class PDP11Bridge {
         password?: string | null
       ): void {
         let urlStr = typeof url === 'string' ? url : url.toString();
-        console.log(`[PDP11Bridge] XHR request: ${method} ${urlStr}`);
 
         // Check if this is a disk image request (media/rk0.dsk, media/rk1.dsk, etc.)
         const diskMatch = urlStr.match(/media\/rk(\d+)\.dsk$/);
         if (diskMatch) {
           const driveNum = parseInt(diskMatch[1], 10);
           const config = diskConfigs[driveNum];
-          console.log(`[PDP11Bridge] Disk ${driveNum} config:`, config);
 
           if (config && config.url) {
             // Add cache-busting timestamp to prevent browser caching
-            const cacheBuster = `?t=${Date.now()}`;
-            const newUrl = config.url + cacheBuster;
-            console.log(`[PDP11Bridge] Redirecting disk ${driveNum}: ${urlStr} -> ${newUrl}`);
-            urlStr = newUrl;
-          } else {
-            console.warn(`[PDP11Bridge] No config for disk ${driveNum}, using original URL`);
+            urlStr = config.url + `?t=${Date.now()}`;
           }
         }
 
-        // Call original with proper arguments - use any to bypass strict typing
-        // since we're proxying a complex method signature
         (originalOpen as any).apply(this, [method, urlStr, async, username, password]);
       };
 

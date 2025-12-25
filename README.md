@@ -185,9 +185,9 @@ See the actual 1974 C code as it runs:
 
 **Time Machine Mode**
 Experience how Unix evolved:
-- **Unix V4 (1973)**: First version in C - tape converted to disk (experimental)
+- **Unix V4 (1973)**: First version in C - tape converted to disk, working!
 - **Unix V5 (1974)**: Fully working - the primary experience
-- **Unix V6 (1975)**: Lions' Commentary era - now available!
+- **Unix V6 (1975)**: Placeholder - need authentic V6 disk image from TUHS
 
 **Multi-User Experience**
 Unix was revolutionary as a multi-user system. Click "+ New TTY" to:
