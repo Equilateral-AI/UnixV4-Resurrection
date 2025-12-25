@@ -185,9 +185,9 @@ See the actual 1974 C code as it runs:
 
 **Time Machine Mode**
 Experience how Unix evolved:
-- **Unix V4 (1973)**: First version in C - the language that changed everything
-- **Unix V5 (1974)**: This release - when Unix became portable
-- **Unix V6 (1975)**: The version that spread to universities worldwide
+- **Unix V4 (1973)**: First version in C - tape converted to disk (see below)
+- **Unix V5 (1974)**: Fully working - the primary experience
+- **Unix V6 (1975)**: Compressed image - decompression coming soon
 
 **Multi-User Experience**
 Unix was revolutionary as a multi-user system. Click "+ New TTY" to:
@@ -202,6 +202,43 @@ Every modern operating system traces its lineage here:
 - macOS is a direct Unix descendant (via BSD)
 - Windows adopted Unix concepts (pipes, processes)
 - The cloud runs on these 50-year-old ideas
+
+---
+
+## Development Progress
+
+### V4 Tape-to-Disk Conversion (December 24, 2025)
+
+The recovered Unix V4 tape image was in SIMH tape format, not a bootable disk. We performed the following conversion:
+
+1. **Analyzed tape format**: 4,280 records of 512 bytes each in SIMH format
+2. **Identified archive type**: Unix `tp` (tape) archive containing filesystem
+3. **Located filesystem**: Found valid Unix filesystem at tape block 76
+   - Superblock: `isize=80, fsize=4000, nfree=54`
+4. **Created RK05 disk image**: Combined V5 boot block with V4 filesystem
+   - Result: `unix-v4-new.dsk` (2.4MB)
+
+**Status**: Disk image created, boot testing in progress.
+
+### Era Status
+
+| Era | Status | Notes |
+|-----|--------|-------|
+| **V4 (1973)** | Experimental | Tape converted to disk - may need kernel verification |
+| **V5 (1974)** | Working | Primary experience, fully tested |
+| **V6 (1975)** | Pending | Compressed image needs decompression |
+
+---
+
+## Known Issues
+
+1. **V4 Boot Status**: The V4 disk image was created from tape extraction. The tape may contain utilities/source rather than a complete bootable system. Testing required.
+
+2. **V6 Compressed**: The V6 disk image is zstd-compressed. Decompression support coming soon.
+
+3. **Source Overlay**: Currently shows V5 source for all eras. Era-specific source mapping planned.
+
+4. **Multi-TTY Sync**: Occasional desync between terminals. Refresh to resync.
 
 ---
 
