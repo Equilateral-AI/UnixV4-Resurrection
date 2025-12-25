@@ -185,9 +185,9 @@ See the actual 1974 C code as it runs:
 
 **Time Machine Mode**
 Experience how Unix evolved:
-- **Unix V4 (1973)**: First version in C - tape converted to disk (see below)
+- **Unix V4 (1973)**: First version in C - tape converted to disk (experimental)
 - **Unix V5 (1974)**: Fully working - the primary experience
-- **Unix V6 (1975)**: Compressed image - decompression coming soon
+- **Unix V6 (1975)**: Lions' Commentary era - now available!
 
 **Multi-User Experience**
 Unix was revolutionary as a multi-user system. Click "+ New TTY" to:
@@ -226,7 +226,7 @@ The recovered Unix V4 tape image was in SIMH tape format, not a bootable disk. W
 |-----|--------|-------|
 | **V4 (1973)** | Experimental | Tape converted to disk - may need kernel verification |
 | **V5 (1974)** | Working | Primary experience, fully tested |
-| **V6 (1975)** | Pending | Compressed image needs decompression |
+| **V6 (1975)** | Working | Decompressed from vendor archive - Lions' Commentary era |
 
 ---
 
@@ -234,11 +234,9 @@ The recovered Unix V4 tape image was in SIMH tape format, not a bootable disk. W
 
 1. **V4 Boot Status**: The V4 disk image was created from tape extraction. The tape may contain utilities/source rather than a complete bootable system. Testing required.
 
-2. **V6 Compressed**: The V6 disk image is zstd-compressed. Decompression support coming soon.
+2. **Source Overlay**: Currently shows V5 source for all eras. Era-specific source mapping planned.
 
-3. **Source Overlay**: Currently shows V5 source for all eras. Era-specific source mapping planned.
-
-4. **Multi-TTY Sync**: Occasional desync between terminals. Refresh to resync.
+3. **Multi-TTY Sync**: Occasional desync between terminals. Refresh to resync.
 
 ---
 

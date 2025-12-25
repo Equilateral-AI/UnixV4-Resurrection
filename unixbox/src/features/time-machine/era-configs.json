@@ -41,12 +41,11 @@
       "id": "v6",
       "name": "Unix V6 (May 1975)",
       "year": 1975,
-      "diskImage": "/vendor/pdp11/media/rk0.dsk.zst",
+      "diskImage": "/disk-images/unix-v6.dsk",
       "bootCommand": "boot rk0",
       "notes": "Lions' Commentary era. Most documented early Unix.",
       "features": ["portable C", "improved pipes", "full documentation"],
       "memory": "256 KB",
-      "compressed": true,
       "banner": [
         "╔════════════════════════════════════════════════════════════════════════════╗",
         "║                          UNIX Sixth Edition                                ║",
