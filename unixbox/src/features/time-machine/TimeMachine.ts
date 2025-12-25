@@ -38,15 +38,14 @@ export type BootProgressCallback = (stage: string, progress: number) => void;
 export class TimeMachine {
   private eraConfigs: EraConfigs;
   private currentEraId: string;
-  private pdp11: PDP11Bridge;
   private terminal: Terminal | null = null;
   private eraChangeCallbacks: EraChangeCallback[] = [];
   private bootProgressCallbacks: BootProgressCallback[] = [];
 
-  constructor(pdp11: PDP11Bridge) {
+  constructor(_pdp11: PDP11Bridge) {
     this.eraConfigs = eraConfigsData as EraConfigs;
     this.currentEraId = this.eraConfigs.defaultEra;
-    this.pdp11 = pdp11;
+    // pdp11 bridge kept for API compatibility but not used with page-reload switching
   }
 
   /**
@@ -92,13 +91,6 @@ export class TimeMachine {
   }
 
   /**
-   * Emit era change event to all listeners
-   */
-  private emitEraChange(eraId: string, eraConfig: EraConfig): void {
-    this.eraChangeCallbacks.forEach(callback => callback(eraId, eraConfig));
-  }
-
-  /**
    * Emit boot progress event to all listeners
    */
   private emitBootProgress(stage: string, progress: number): void {
@@ -107,7 +99,7 @@ export class TimeMachine {
 
   /**
    * Switch to a different Unix era
-   * This reconfigures the disk image and reboots the emulator
+   * This reloads the page with the new era to ensure clean disk cache
    */
   async switchEra(eraId: string): Promise<void> {
     const eraConfig = this.getEra(eraId);
@@ -123,117 +115,26 @@ export class TimeMachine {
 
     console.log(`[TimeMachine] Switching era: ${this.currentEraId} -> ${eraId}`);
 
-    // Update current era
-    this.currentEraId = eraId;
-
-    // Show era switch animation
+    // Show brief animation before reload
     if (this.terminal) {
-      await this.showEraSwitchAnimation(eraConfig);
+      this.terminal.clear();
+      this.terminal.writeln('');
+      this.terminal.writeln('\x1b[1;36m╔════════════════════════════════════════════════════════════════════════════╗\x1b[0m');
+      this.terminal.writeln('\x1b[1;36m║                          TIME MACHINE ACTIVATED                            ║\x1b[0m');
+      this.terminal.writeln('\x1b[1;36m╚════════════════════════════════════════════════════════════════════════════╝\x1b[0m');
+      this.terminal.writeln('');
+      this.terminal.writeln(`\x1b[33mTraveling to: \x1b[1;33m${eraConfig.name}\x1b[0m`);
+      this.terminal.writeln('');
+      this.terminal.writeln('\x1b[90mReloading emulator with new disk image...\x1b[0m');
     }
 
-    // Reconfigure disk and reboot
-    await this.reconfigureAndBoot(eraConfig);
+    // Wait a moment for visual feedback
+    await this.sleep(800);
 
-    // Emit era change event
-    this.emitEraChange(eraId, eraConfig);
-  }
-
-  /**
-   * Show visual feedback during era switching
-   */
-  private async showEraSwitchAnimation(eraConfig: EraConfig): Promise<void> {
-    if (!this.terminal) return;
-
-    const terminal = this.terminal;
-
-    // Clear screen
-    terminal.clear();
-
-    // Show time travel animation
-    terminal.writeln('');
-    terminal.writeln('\x1b[1;36m╔════════════════════════════════════════════════════════════════════════════╗\x1b[0m');
-    terminal.writeln('\x1b[1;36m║                          TIME MACHINE ACTIVATED                            ║\x1b[0m');
-    terminal.writeln('\x1b[1;36m╚════════════════════════════════════════════════════════════════════════════╝\x1b[0m');
-    terminal.writeln('');
-    terminal.writeln(`\x1b[33mTraveling to: \x1b[1;33m${eraConfig.name}\x1b[0m`);
-    terminal.writeln('');
-
-    // Animated time travel effect
-    const years = [2024, 2000, 1990, 1985, 1980, 1975, eraConfig.year];
-    for (const year of years) {
-      terminal.write(`\r\x1b[K\x1b[90m  >> Year: ${year} ${'.'.repeat(Math.random() * 10 | 0)}\x1b[0m`);
-      await this.sleep(150);
-    }
-
-    terminal.writeln('');
-    terminal.writeln('');
-    terminal.writeln(`\x1b[1;32m✓ Arrived at ${eraConfig.year}\x1b[0m`);
-    terminal.writeln('');
-
-    // Show era banner
-    eraConfig.banner.forEach(line => {
-      terminal.writeln(`\x1b[1;32m${line}\x1b[0m`);
-    });
-
-    terminal.writeln('');
-    terminal.writeln('\x1b[36m[INFO] Reconfiguring hardware for this era...\x1b[0m');
-    terminal.writeln(`\x1b[36m[INFO] Memory: ${eraConfig.memory}\x1b[0m`);
-    terminal.writeln(`\x1b[36m[INFO] Disk: ${eraConfig.diskImage}\x1b[0m`);
-    terminal.writeln('');
-
-    await this.sleep(1000);
-  }
-
-  /**
-   * Reconfigure emulator and boot with new disk image
-   */
-  private async reconfigureAndBoot(eraConfig: EraConfig): Promise<void> {
-    console.log(`[TimeMachine] Reconfiguring for era: ${eraConfig.id}`);
-
-    // Reset the emulator
-    this.pdp11.reset();
-
-    // Configure new disk image
-    this.pdp11.configureDisk({
-      drive: 0,
-      url: eraConfig.diskImage,
-      mounted: true
-    });
-
-    if (this.terminal) {
-      this.terminal.writeln('\x1b[33m[EMULATOR] Resetting PDP-11/40...\x1b[0m');
-      await this.sleep(500);
-
-      this.terminal.writeln('\x1b[33m[EMULATOR] Loading boot ROM...\x1b[0m');
-      await this.sleep(500);
-
-      this.terminal.writeln(`\x1b[33m[EMULATOR] Mounting disk: ${eraConfig.diskImage}\x1b[0m`);
-      await this.sleep(500);
-
-      this.terminal.writeln('');
-      this.terminal.writeln(`\x1b[1;32m=== Starting PDP-11/40 (${eraConfig.name}) ===\x1b[0m`);
-      this.terminal.writeln('');
-    }
-
-    // Boot the emulator
-    this.pdp11.boot();
-
-    if (this.terminal) {
-      this.terminal.writeln('\x1b[1;32m[READY] System booted successfully\x1b[0m');
-      this.terminal.writeln('');
-      this.terminal.writeln('\x1b[1;33mFeatures in this era:\x1b[0m');
-      eraConfig.features.forEach(feature => {
-        this.terminal!.writeln(`\x1b[90m  • ${feature}\x1b[0m`);
-      });
-      this.terminal.writeln('');
-      this.terminal.writeln(`\x1b[90m${eraConfig.notes}\x1b[0m`);
-      this.terminal.writeln('');
-      this.terminal.writeln('\x1b[90mKeyboard shortcuts:\x1b[0m');
-      this.terminal.writeln('\x1b[90m  Ctrl+R - Reset/Reboot\x1b[0m');
-      this.terminal.writeln('\x1b[90m  Ctrl+B - Boot Menu\x1b[0m');
-      this.terminal.writeln('\x1b[90m  Ctrl+S - CPU Status\x1b[0m');
-      this.terminal.writeln('');
-    }
+    // Reload page with era parameter - this ensures disk cache is cleared
+    const url = new URL(window.location.href);
+    url.searchParams.set('era', eraId);
+    window.location.href = url.toString();
   }
 
   /**

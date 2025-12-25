@@ -91,14 +91,46 @@ window.addEventListener('resize', () => {
   fitAddon.fit();
 });
 
+// Get era from URL parameter (for Time Machine switching)
+function getEraFromUrl(): string {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('era') || 'v5'; // Default to V5
+}
+
 // Initialize and boot the PDP-11 emulator
 async function bootEmulator() {
   try {
+    // Determine which era to boot
+    const eraId = getEraFromUrl();
+    const eraConfig = timeMachine.getEra(eraId);
+
+    if (!eraConfig) {
+      console.error(`[UnixBox] Unknown era: ${eraId}, falling back to v5`);
+    }
+
+    const diskImage = eraConfig?.diskImage || '/disk-images/unix-v5.dsk';
+    const eraName = eraConfig?.name || 'Unix V5 (November 1974)';
+
+    // Update TimeMachine's internal state to match URL
+    if (eraConfig && eraId !== 'v5') {
+      (timeMachine as any).currentEraId = eraId;
+    }
+
     terminal.writeln('\x1b[33m[EMULATOR] Initializing PDP-11/40 processor...\x1b[0m');
 
     // Initialize emulator (loads scripts)
     await pdp11.initialize();
     terminal.writeln('\x1b[32m[EMULATOR] Core loaded successfully\x1b[0m');
+
+    // Configure disk for selected era (must be done after initialize, before boot)
+    if (eraConfig && eraId !== 'v5') {
+      pdp11.configureDisk({
+        drive: 0,
+        url: diskImage,
+        mounted: true
+      });
+      terminal.writeln(`\x1b[36m[TIME MACHINE] Era selected: ${eraName}\x1b[0m`);
+    }
 
     // Connect terminal I/O
     terminal.writeln('\x1b[33m[EMULATOR] Connecting terminal...\x1b[0m');
@@ -127,9 +159,9 @@ async function bootEmulator() {
 
     // Boot the system
     terminal.writeln('\x1b[33m[EMULATOR] Loading boot ROM...\x1b[0m');
-    terminal.writeln('\x1b[33m[EMULATOR] Mounting RK05 disk 0: /disk-images/unix-v5.dsk\x1b[0m');
+    terminal.writeln(`\x1b[33m[EMULATOR] Mounting RK05 disk 0: ${diskImage}\x1b[0m`);
     terminal.writeln('');
-    terminal.writeln('\x1b[1;32m=== Starting PDP-11/40 ===\x1b[0m');
+    terminal.writeln(`\x1b[1;32m=== Starting PDP-11/40 (${eraName}) ===\x1b[0m`);
     terminal.writeln('');
 
     // Boot the emulator
