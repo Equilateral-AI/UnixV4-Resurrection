@@ -201,6 +201,9 @@ export class PDP11Bridge {
     const originalFetch = window.fetch;
     const diskConfigs = this.diskConfigs;
 
+    // Log current disk configuration
+    console.log('[PDP11Bridge] Disk configs at patch time:', JSON.stringify(diskConfigs));
+
     // Intercept fetch for .zst files - return 404 quickly so it falls back to XHR
     (window as any).fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
       const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
@@ -237,10 +240,16 @@ export class PDP11Bridge {
         if (diskMatch) {
           const driveNum = parseInt(diskMatch[1], 10);
           const config = diskConfigs[driveNum];
+          console.log(`[PDP11Bridge] Disk ${driveNum} config:`, config);
 
           if (config && config.url) {
-            console.log(`[PDP11Bridge] Redirecting disk ${driveNum}: ${urlStr} -> ${config.url}`);
-            urlStr = config.url;
+            // Add cache-busting timestamp to prevent browser caching
+            const cacheBuster = `?t=${Date.now()}`;
+            const newUrl = config.url + cacheBuster;
+            console.log(`[PDP11Bridge] Redirecting disk ${driveNum}: ${urlStr} -> ${newUrl}`);
+            urlStr = newUrl;
+          } else {
+            console.warn(`[PDP11Bridge] No config for disk ${driveNum}, using original URL`);
           }
         }
 

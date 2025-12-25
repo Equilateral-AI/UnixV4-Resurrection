@@ -94,7 +94,10 @@ window.addEventListener('resize', () => {
 // Get era from URL parameter (for Time Machine switching)
 function getEraFromUrl(): string {
   const params = new URLSearchParams(window.location.search);
-  return params.get('era') || 'v5'; // Default to V5
+  const era = params.get('era') || 'v5'; // Default to V5
+  console.log(`[UnixBox] URL: ${window.location.href}`);
+  console.log(`[UnixBox] Era from URL: ${era}`);
+  return era;
 }
 
 // Initialize and boot the PDP-11 emulator
@@ -123,13 +126,17 @@ async function bootEmulator() {
     terminal.writeln('\x1b[32m[EMULATOR] Core loaded successfully\x1b[0m');
 
     // Configure disk for selected era (must be done after initialize, before boot)
+    console.log(`[UnixBox] Era ID: ${eraId}, Disk: ${diskImage}`);
     if (eraConfig && eraId !== 'v5') {
+      console.log(`[UnixBox] Configuring non-V5 era disk: ${diskImage}`);
       pdp11.configureDisk({
         drive: 0,
         url: diskImage,
         mounted: true
       });
       terminal.writeln(`\x1b[36m[TIME MACHINE] Era selected: ${eraName}\x1b[0m`);
+    } else {
+      console.log(`[UnixBox] Using default V5 disk`);
     }
 
     // Connect terminal I/O
