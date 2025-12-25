@@ -45,7 +45,7 @@ The Time Machine Mode allows users to switch between different Unix versions (V4
 1. **Unix V4** - `/Users/jamesford/Source/UnixV4-Resurrection/unixbox/public/disk-images/unix-v4.dsk`
    - Copied from v4_tape.tap (2.5 MB)
    - First Unix rewritten in C
-   - Recently recovered from Bell Labs (December 2024)
+   - Recently recovered from Bell Labs (December 2025)
 
 2. **Unix V5** - `/Users/jamesford/Source/UnixV4-Resurrection/unixbox/public/disk-images/unix-v5.dsk`
    - Already available (2.4 MB)
@@ -242,5 +242,5 @@ npm run build
 
 - **PDP-11 Emulator**: Paul Nankervis
 - **Unix Versions**: Bell Labs / AT&T
-- **V4 Recovery**: Bell Labs tape archive (December 2024)
+- **V4 Recovery**: Bell Labs tape archive (December 2025)
 - **Implementation**: Built for UnixBox educational platform

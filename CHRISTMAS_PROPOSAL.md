@@ -1,6 +1,6 @@
 # Unix Resurrection: A Christmas Proposal
 
-**Date**: December 24, 2024
+**Date**: December 24, 2025
 **From**: Agentic Santa's Research Elves
 
 ---

@@ -109,7 +109,7 @@ Features in this era:
   • pipes
   • grep
 
-First version rewritten in C. Recently recovered from Bell Labs (December 2024)!
+First version rewritten in C. Recently recovered from Bell Labs (December 2025)!
 
 Keyboard shortcuts:
   Ctrl+R - Reset/Reboot

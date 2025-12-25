@@ -148,7 +148,34 @@ async function bootEmulator() {
     setTimeout(() => {
       annotationEngine.startMonitoring();
       console.log('[Educational] Syscall monitoring started');
+
+      // Show a demo annotation to demonstrate the feature
+      annotationEngine.showAnnotation(1); // fork() - a classic syscall
     }, 2000);
+
+    // Add annotation toggle button to status bar
+    const statusBar = document.getElementById('status-bar');
+    if (statusBar) {
+      const annotationBtn = document.createElement('button');
+      annotationBtn.id = 'annotation-toggle-btn';
+      annotationBtn.innerHTML = '📚 Annotations';
+      annotationBtn.title = 'Toggle syscall annotations panel (Ctrl+A)';
+      annotationBtn.style.cssText = `
+        background: #001a00;
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        padding: 0.3rem 0.6rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.8rem;
+        cursor: pointer;
+        border-radius: 4px;
+        margin-left: 1rem;
+      `;
+      annotationBtn.onclick = () => {
+        annotationPanel.toggle();
+      };
+      statusBar.appendChild(annotationBtn);
+    }
 
     // Show success
     terminal.writeln('\x1b[1;32m[READY] System booted successfully\x1b[0m');
@@ -267,8 +294,8 @@ terminal.attachCustomKeyEventHandler((event: KeyboardEvent) => {
   // Ctrl+A - Toggle annotation panel
   if (event.ctrlKey && event.key === 'a') {
     event.preventDefault();
-//     annotationPanel.toggle();
-//     console.log(`[Educational] Annotation panel ${annotationPanel.visible() ? 'shown' : 'hidden'}`);
+    annotationPanel.toggle();
+    console.log(`[Educational] Annotation panel ${annotationPanel.visible() ? 'shown' : 'hidden'}`);
     return false;
   }
 

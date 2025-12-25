@@ -1,6 +1,6 @@
 # Unix V4/V5 Resurrection Project
 
-**A Christmas Gift from Agentic Santa - December 2024**
+**A Christmas Gift from Agentic Santa - December 2025**
 
 Run Unix from 1974 in your browser. Experience computing history.
 
@@ -10,7 +10,7 @@ Run Unix from 1974 in your browser. Experience computing history.
 
 This repository contains Unix V5 source code from November 1974, extracted from the TUHS
 (The Unix Heritage Society) archive, along with the recently recovered Unix V4 tape image
-from Bell Labs (December 2024 discovery).
+from Bell Labs (December 2025 discovery).
 
 ## Source Code Statistics
 
@@ -134,7 +134,7 @@ cat usr/source/s2/sh.c
 ## References
 
 - [TUHS Archive](https://www.tuhs.org/) - The Unix Heritage Society
-- [Unix V4 Tape Recovery](https://archive.org/) - December 2024 announcement
+- [Unix V4 Tape Recovery](https://archive.org/) - December 2025 announcement
 - [Lions' Commentary](https://en.wikipedia.org/wiki/Lions%27_Commentary_on_UNIX_6th_Edition) - Classic study of Unix V6
 - [The Evolution of Unix](https://www.bell-labs.com/usr/dmr/www/hist.html) - Dennis Ritchie's history
 
@@ -168,12 +168,40 @@ npm run dev
 4. Click "+ New TTY" for multi-user experience
 5. Watch syscall annotations as you work
 
-### Educational Value
+### Educational Features In Depth
 
-When you run commands, you'll see:
-- The original 1974 C source code that handles your request
-- Explanations of syscalls like `fork()`, `exec()`, `pipe()`
-- The famous "You are not expected to understand this" comment
+**Syscall Annotations**
+When Unix executes system calls, the annotation panel explains what's happening:
+- `fork()` - How Unix creates new processes (the basis of all modern process management)
+- `exec()` - How programs are loaded and executed
+- `pipe()` - Inter-process communication that powers shell pipelines (`ls | grep`)
+- `read()`/`write()` - The elegant "everything is a file" I/O model
+
+**Source Code Overlay**
+See the actual 1974 C code as it runs:
+- Ken Thompson's kernel code from `usr/sys/ken/`
+- Dennis Ritchie's device drivers from `usr/sys/dmr/`
+- The famous comment in `slp.c`: *"You are not expected to understand this"*
+
+**Time Machine Mode**
+Experience how Unix evolved:
+- **Unix V4 (1973)**: First version in C - the language that changed everything
+- **Unix V5 (1974)**: This release - when Unix became portable
+- **Unix V6 (1975)**: The version that spread to universities worldwide
+
+**Multi-User Experience**
+Unix was revolutionary as a multi-user system. Click "+ New TTY" to:
+- Open multiple terminal sessions (TTY0-TTY7)
+- Login as different users (`root`, `dmr`, `ken`)
+- See how 1970s timesharing worked
+- Watch processes interact across terminals
+
+**Why This Matters**
+Every modern operating system traces its lineage here:
+- Linux implements the same syscall interface
+- macOS is a direct Unix descendant (via BSD)
+- Windows adopted Unix concepts (pipes, processes)
+- The cloud runs on these 50-year-old ideas
 
 ---
 
@@ -189,7 +217,7 @@ When you run commands, you'll see:
 
 ### UnixBox Web Interface
 - **Equilateral AI** (Pareidolia LLC)
-- Built with Claude Code - December 2024
+- Built with Claude Code - December 2025
 
 ### Historical Preservation
 - **The Unix Heritage Society** (TUHS) - Archive maintenance
