@@ -6,16 +6,18 @@
       "year": 1973,
       "diskImage": "/disk-images/unix-v4.dsk",
       "bootCommand": "boot tm0",
-      "notes": "First version rewritten in C. Recently recovered from Bell Labs (December 2024)!",
+      "notes": "First version rewritten in C. Tape image recovered - disk conversion in progress.",
       "features": ["C kernel", "pipes", "grep"],
       "memory": "64 KB",
+      "disabled": true,
+      "disabledReason": "V4 was distributed on tape, not disk. Disk conversion in progress.",
       "banner": [
         "╔════════════════════════════════════════════════════════════════════════════╗",
         "║                          UNIX Fourth Edition                               ║",
         "║                          November 1973                                     ║",
         "║                                                                            ║",
         "║                    First Unix written in C                                 ║",
-        "║              Recently recovered from Bell Labs tape!                       ║",
+        "║              Tape image recovered - disk boot coming soon!                 ║",
         "╚════════════════════════════════════════════════════════════════════════════╝"
       ]
     },

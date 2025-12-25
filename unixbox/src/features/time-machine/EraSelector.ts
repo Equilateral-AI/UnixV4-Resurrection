@@ -68,15 +68,16 @@ export class EraSelector {
    */
   private renderEraTab(era: EraConfig, isActive: boolean): string {
     const activeClass = isActive ? 'active' : '';
-    const disabledClass = era.compressed ? 'disabled' : '';
-    const title = era.compressed ? 'V6 requires decompression (coming soon)' : era.notes;
+    const isDisabled = (era as any).disabled || era.compressed;
+    const disabledClass = isDisabled ? 'disabled' : '';
+    const title = (era as any).disabledReason || (era.compressed ? 'V6 requires decompression (coming soon)' : era.notes);
 
     return `
       <button
         class="era-tab ${activeClass} ${disabledClass}"
         data-era-id="${era.id}"
         title="${title}"
-        ${era.compressed ? 'disabled' : ''}
+        ${isDisabled ? 'disabled' : ''}
       >
         <div class="era-tab-year">${era.year}</div>
         <div class="era-tab-name">V${era.id.substring(1)}</div>

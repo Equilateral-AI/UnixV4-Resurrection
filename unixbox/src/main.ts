@@ -192,7 +192,22 @@ async function bootEmulator() {
     terminal.writeln('');
     terminal.writeln('\x1b[90mEducational Mode:\x1b[0m');
     terminal.writeln('\x1b[90m  System calls are automatically detected and annotated\x1b[0m');
-    terminal.writeln('\x1b[90m  Annotations appear in the panel on the right\x1b[0m');
+    terminal.writeln('\x1b[90m  Click "Annotations" button or press Ctrl+A to toggle panel\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[1;33m═══════════════════════════════════════════════════════════════\x1b[0m');
+    terminal.writeln('\x1b[1;33m  HOW TO USE UNIX V5 (1974)\x1b[0m');
+    terminal.writeln('\x1b[1;33m═══════════════════════════════════════════════════════════════\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[32m  1. Wait for the "@" prompt (boot loader)\x1b[0m');
+    terminal.writeln('\x1b[32m  2. Type: unix    (loads the kernel)\x1b[0m');
+    terminal.writeln('\x1b[32m  3. Wait for "login:" prompt\x1b[0m');
+    terminal.writeln('\x1b[32m  4. Type: root    (no password needed)\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[90m  Available users: root, ken, dmr\x1b[0m');
+    terminal.writeln('\x1b[90m  Try commands: ls, cat, who, ps, date, ed\x1b[0m');
+    terminal.writeln('\x1b[90m  Exit shell: ctrl+d or type "login" for new session\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[1;33m═══════════════════════════════════════════════════════════════\x1b[0m');
     terminal.writeln('');
 
   } catch (error) {
