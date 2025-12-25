@@ -1,16 +1,17 @@
-# Unix V4/V5 Resurrection Project
+# Unix V4/V5/V6 Resurrection Project
 
 **A Christmas Gift from Agentic Santa - December 2025**
 
-Run Unix from 1974 in your browser. Experience computing history.
+Run Unix from 1973-1975 in your browser. Experience computing history.
 
-**Status**: Complete - Web-based PDP-11 emulator with educational features
+**Status**: Complete - All three eras working with Time Machine switching and educational overlays
 
 ## What This Is
 
-This repository contains Unix V5 source code from November 1974, extracted from the TUHS
-(The Unix Heritage Society) archive, along with the recently recovered Unix V4 tape image
-from Bell Labs (December 2025 discovery).
+This repository contains Unix V4, V5, and V6 running in a browser-based PDP-11 emulator:
+- **Unix V4** (1973) - Recovered tape image from Bell Labs, converted to disk
+- **Unix V5** (1974) - Complete source code from TUHS archive
+- **Unix V6** (1975) - Lions' Commentary era, from TUHS v6root archive
 
 ## Source Code Statistics
 
