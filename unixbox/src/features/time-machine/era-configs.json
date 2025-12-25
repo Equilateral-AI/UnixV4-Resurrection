@@ -42,9 +42,9 @@
       "name": "Unix V6 (May 1975)",
       "year": 1975,
       "diskImage": "/disk-images/unix-v6.dsk",
-      "bootCommand": "boot rk0",
-      "notes": "Lions' Commentary era. Most documented early Unix.",
-      "features": ["portable C", "improved pipes", "full documentation"],
+      "bootCommand": "boot rk0 / rkunix",
+      "notes": "Lions' Commentary era. Use 'rkunix' at @ prompt (RK05 driver). From TUHS archive.",
+      "features": ["portable C", "improved pipes", "full documentation", "Lions' book"],
       "memory": "256 KB",
       "banner": [
         "╔════════════════════════════════════════════════════════════════════════════╗",
@@ -52,7 +52,7 @@
         "║                          May 1975                                          ║",
         "║                                                                            ║",
         "║                    Lions' Commentary Era                                   ║",
-        "║              Most documented early Unix version                            ║",
+        "║       Type 'rkunix' at @ prompt (RK05 kernel) | From TUHS Archive          ║",
         "╚════════════════════════════════════════════════════════════════════════════╝"
       ]
     }

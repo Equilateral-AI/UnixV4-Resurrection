@@ -226,21 +226,21 @@ The recovered Unix V4 tape image was in SIMH tape format, not a bootable disk. W
 |-----|--------|-------------|-------|
 | **V4 (1973)** | Working | 27,624 bytes | Tape converted to disk - verified via Playwright |
 | **V5 (1974)** | Working | 25,802 bytes | Primary experience, fully tested |
-| **V6 (1975)** | Placeholder | - | Using V5 image - need authentic V6 disk image |
+| **V6 (1975)** | Working | 28,636 bytes | From TUHS archive - use `rkunix` at @ prompt |
 
-**Note**: The vendor's rk0.dsk was labeled as "Unix V5" in their documentation. A true V6 disk image from TUHS or other sources is needed for authentic V6 experience.
+**V6 Note**: Downloaded from TUHS (v6root.gz), converted to bootable RK05 disk image. Boot with `rkunix` (RK05 kernel) at the @ prompt instead of `unix`.
 
-**Verification**: Era switching tested with Playwright automation - confirmed different filesystems load (V4 has Jun 1974 dates, V5 has Nov 1974 dates).
+**Verification**: Era switching tested with Playwright automation - confirmed different filesystems load (V4 has Jun 1974 dates, V5 has Nov 1974 dates, V6 has Jul 1975 dates).
 
 ---
 
 ## Known Issues
 
-1. **V6 Disk Image**: Currently using V5 disk image as placeholder. Need authentic V6 disk image from TUHS for true V6 experience.
+1. **Source Overlay**: Currently shows V5 source for all eras. Era-specific source mapping planned.
 
-2. **Source Overlay**: Currently shows V5 source for all eras. Era-specific source mapping planned.
+2. **Multi-TTY Sync**: Occasional desync between terminals. Refresh to resync.
 
-3. **Multi-TTY Sync**: Occasional desync between terminals. Refresh to resync.
+3. **V6 Boot Command**: V6 requires typing `rkunix` at the @ prompt (not `unix`) because the RK05 disk driver is separate.
 
 ---
 
