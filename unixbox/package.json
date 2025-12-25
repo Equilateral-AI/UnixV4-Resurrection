@@ -13,11 +13,17 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
+    "playwright": "^1.57.0",
     "xterm": "^5.3.0",
     "xterm-addon-fit": "^0.8.0",
     "xterm-addon-web-links": "^0.9.0"
   },
-  "keywords": ["unix", "pdp11", "emulator", "retro"],
+  "keywords": [
+    "unix",
+    "pdp11",
+    "emulator",
+    "retro"
+  ],
   "author": "Equilateral AI",
   "license": "MIT"
 }
