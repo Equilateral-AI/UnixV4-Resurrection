@@ -44,6 +44,23 @@ The kernel code is split between two legendary programmers:
 - `login.c`, `init.c` - System startup
 - `ps.c`, `who.c` - Process/user monitoring
 
+### Games (`usr/games/`)
+
+Seven authentic 1974 games survive as compiled PDP-11 executables:
+
+| Game | Size | Description |
+|------|------|-------------|
+| `chess` | 16 KB | Chess — one of the earliest computer chess programs |
+| `wump` | 5.4 KB | Hunt the Wumpus — classic cave exploration game, created at Bell Labs |
+| `cubic` | 2.5 KB | 3D cube puzzle |
+| `ttt` | 2.2 KB | Tic-Tac-Toe (with `ttt.k` knowledge base for AI opponent) |
+| `bj` | 1.6 KB | Blackjack |
+| `moo` | 624 B | Mastermind-like number guessing game |
+
+Run them in the UnixBox emulator: boot into Unix V5 and type `/usr/games/wump`.
+
+These are original binaries from the tape — source code was not included in the V4/V5 distribution. For game source from later editions, see the [TUHS Archive](https://www.tuhs.org/).
+
 ### C Compiler
 - `usr/c/c0*.c` - Lexer and parser
 - `usr/c/c1*.c` - Code generation
@@ -110,7 +127,20 @@ int foo(int x, int y) { }      foo(x, y) int x; int y; { }
 - `usr/sys/param.h` - System parameters (50 processes max, 15 files per process)
 - `usr/sys/proc.h` - Process structure, process states
 
-## Getting Started
+## Quick Start: Run Unix in Your Browser
+
+```bash
+git clone https://github.com/Equilateral-AI/UnixV4-Resurrection.git
+cd UnixV4-Resurrection/unixbox
+npm install
+npm run dev
+```
+
+Open http://localhost:5173 and login as `root` (no password).
+
+The PDP-11 emulator and all vendor files are included in the repo — no additional setup required. For detailed configuration, see `unixbox/docs/SETUP_COMPLETE.md` and `unixbox/docs/PDP11_INTEGRATION_COMPLETE.md`.
+
+## Browsing the Source Code
 
 ```bash
 # The source is already extracted in this directory
