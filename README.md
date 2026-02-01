@@ -135,9 +135,9 @@ cat usr/source/s2/sh.c
 ## References
 
 - [TUHS Archive](https://www.tuhs.org/) - The Unix Heritage Society
-- [Unix V4 Tape Recovery](https://archive.org/) - December 2025 announcement
-- [Lions' Commentary](https://en.wikipedia.org/wiki/Lions%27_Commentary_on_UNIX_6th_Edition) - Classic study of Unix V6
-- [The Evolution of Unix](https://www.bell-labs.com/usr/dmr/www/hist.html) - Dennis Ritchie's history
+- [Unix V4 Tape Recovery](https://phanpy.social/#/hachyderm.io/s/115504720323483804) - November 2025 announcement
+- [Lions' Commentary](https://en.wikipedia.org/wiki/A_Commentary_on_the_UNIX_Operating_System) - Classic study of Unix V6
+- [The Evolution of Unix](https://web.archive.org/web/20230722042044/https://www.bell-labs.com/usr/dmr/www/hist.html) - The Evolution of the Unix Time-sharing System
 
 ## UnixBox: Browser-Based Experience
 
