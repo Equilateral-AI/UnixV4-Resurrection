@@ -14,20 +14,19 @@ Open http://localhost:3000 in your browser to see the terminal UI.
 ## Current Status
 
 **Terminal UI**: Complete - Retro CRT-style terminal with green phosphor aesthetics
-**PDP-11 Emulator**: Not yet integrated (next step)
-**Unix V5 Boot**: Pending emulator integration
+**PDP-11 Emulator**: Integrated - Paul Nankervis's pdp11.js with TypeScript bridge
+**Unix V5/V6 Boot**: Working - Boot from disk images with full Unix environment
 
 ## Architecture
 
 ```
 unixbox/
   src/
-    emulator/     # PDP-11 WASM emulator
-    terminal/     # xterm.js terminal UI
-    overlays/     # Educational source code overlays
+    emulator/           # PDP-11 emulator bridge (TypeScript)
+    features/           # Educational overlays, annotations, time-machine
   public/
-    disks/        # Unix V5 disk images
-    docs/         # Lions commentary, etc.
+    vendor/pdp11/       # Paul Nankervis's PDP-11 JavaScript emulator
+    disk-images/        # Unix V4/V5/V6 disk images
 ```
 
 ## Prior Art
@@ -37,8 +36,10 @@ unixbox/
 
 ## Roadmap
 
-1. [ ] Wrap pdp11.js with modern terminal UI
-2. [ ] Boot Unix V5 from extracted disk image
-3. [ ] Add source code overlay feature
-4. [ ] Educational annotations
-5. [ ] Multi-TTY support (multiple tabs = multiple users)
+1. [x] Wrap pdp11.js with modern terminal UI
+2. [x] Boot Unix V5/V6 from disk images
+3. [x] Add source code overlay feature
+4. [x] Educational annotations
+5. [x] Multi-TTY support (multiple tabs = multiple users)
+6. [ ] Polish UI/UX and add more interactive features
+7. [ ] Comprehensive documentation and tutorials
