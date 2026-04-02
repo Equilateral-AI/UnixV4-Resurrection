@@ -14,6 +14,9 @@
  */
 
 import type { EducationalEventType } from '../types/educational';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('EducationalEngine');
 
 /**
  * Event handler function type
@@ -50,12 +53,12 @@ export class EducationalEngine {
   on(type: EducationalEventType, handler: EventHandler): void {
     const handlerSet = this.handlers.get(type);
     if (!handlerSet) {
-      console.warn(`[EducationalEngine] Unknown event type: ${type}`);
+      log.warn(`Unknown event type: ${type}`);
       return;
     }
 
     handlerSet.add(handler);
-    console.log(`[EducationalEngine] Registered handler for '${type}' (total: ${handlerSet.size})`);
+    log.debug(`Registered handler for '${type}' (total: ${handlerSet.size})`);
   }
 
   /**
@@ -67,15 +70,15 @@ export class EducationalEngine {
   off(type: EducationalEventType, handler: EventHandler): void {
     const handlerSet = this.handlers.get(type);
     if (!handlerSet) {
-      console.warn(`[EducationalEngine] Unknown event type: ${type}`);
+      log.warn(`Unknown event type: ${type}`);
       return;
     }
 
     const removed = handlerSet.delete(handler);
     if (removed) {
-      console.log(`[EducationalEngine] Unregistered handler for '${type}' (remaining: ${handlerSet.size})`);
+      log.debug(`Unregistered handler for '${type}' (remaining: ${handlerSet.size})`);
     } else {
-      console.warn(`[EducationalEngine] Handler not found for '${type}'`);
+      log.warn(`Handler not found for '${type}'`);
     }
   }
 
@@ -88,7 +91,7 @@ export class EducationalEngine {
   emit(type: EducationalEventType, data: any): void {
     const handlerSet = this.handlers.get(type);
     if (!handlerSet) {
-      console.warn(`[EducationalEngine] Unknown event type: ${type}`);
+      log.warn(`Unknown event type: ${type}`);
       return;
     }
 
@@ -105,11 +108,11 @@ export class EducationalEngine {
           try {
             handler(data);
           } catch (error) {
-            console.error(`[EducationalEngine] Handler error for '${type}':`, error);
+            log.error(`Handler error for '${type}':`, error);
           }
         }, 0);
       } catch (error) {
-        console.error(`[EducationalEngine] Failed to schedule handler for '${type}':`, error);
+        log.error(`Failed to schedule handler for '${type}':`, error);
       }
     }
   }
@@ -122,12 +125,12 @@ export class EducationalEngine {
   clearHandlers(type: EducationalEventType): void {
     const handlerSet = this.handlers.get(type);
     if (!handlerSet) {
-      console.warn(`[EducationalEngine] Unknown event type: ${type}`);
+      log.warn(`Unknown event type: ${type}`);
       return;
     }
 
     handlerSet.clear();
-    console.log(`[EducationalEngine] Cleared all handlers for '${type}'`);
+    log.debug(`Cleared all handlers for '${type}'`);
   }
 
   /**
@@ -137,7 +140,7 @@ export class EducationalEngine {
     for (const handlerSet of this.handlers.values()) {
       handlerSet.clear();
     }
-    console.log('[EducationalEngine] Cleared all handlers');
+    log.debug('Cleared all handlers');
   }
 
   /**

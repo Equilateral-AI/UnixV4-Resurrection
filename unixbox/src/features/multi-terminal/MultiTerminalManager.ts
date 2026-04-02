@@ -6,6 +6,9 @@
  */
 
 import { TerminalSync } from './TerminalSync';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('MultiTerminalManager');
 
 export interface TerminalInfo {
   unit: number;
@@ -44,7 +47,7 @@ export class MultiTerminalManager {
 
     // Listen for input from secondary terminals
     this.terminalSync.onInput((unit: number, data: string) => {
-      console.log(`[MultiTerminalManager] Received input from unit ${unit}: "${data}"`);
+      log.debug(`Received input from unit ${unit}: "${data}"`);
       // Send to emulator's VT52 input
       if (window.vt52Input) {
         for (let i = 0; i < data.length; i++) {
@@ -53,7 +56,7 @@ export class MultiTerminalManager {
       }
     });
 
-    console.log('[MultiTerminalManager] Initialized');
+    log.info('Initialized');
   }
 
   /**
@@ -61,7 +64,7 @@ export class MultiTerminalManager {
    */
   interceptVt52Output(): void {
     if (this.vt52PutIntercepted) {
-      console.warn('[MultiTerminalManager] vt52Put already intercepted');
+      log.warn('vt52Put already intercepted');
       return;
     }
 
@@ -82,7 +85,7 @@ export class MultiTerminalManager {
     };
 
     this.vt52PutIntercepted = true;
-    console.log('[MultiTerminalManager] vt52Put intercepted for multi-terminal output');
+    log.info('vt52Put intercepted for multi-terminal output');
   }
 
   /**
@@ -105,19 +108,19 @@ export class MultiTerminalManager {
     const targetUnit = unit !== undefined ? unit : this.findNextAvailableUnit();
 
     if (targetUnit === null) {
-      console.error('[MultiTerminalManager] No available terminal units');
+      log.error('No available terminal units');
       alert('Maximum number of terminals (8) reached!');
       return null;
     }
 
     const term = this.terminals.get(targetUnit);
     if (!term) {
-      console.error(`[MultiTerminalManager] Invalid unit: ${targetUnit}`);
+      log.error(`Invalid unit: ${targetUnit}`);
       return null;
     }
 
     if (term.inUse && !term.isPrimary) {
-      console.warn(`[MultiTerminalManager] Unit ${targetUnit} already in use`);
+      log.warn(`Unit ${targetUnit} already in use`);
       return term.windowRef || null;
     }
 
@@ -130,7 +133,7 @@ export class MultiTerminalManager {
 
     if (windowRef) {
       term.windowRef = windowRef;
-      console.log(`[MultiTerminalManager] Spawned terminal unit ${targetUnit}`);
+      log.info(`Spawned terminal unit ${targetUnit}`);
 
       // Listen for window close
       const checkClosed = setInterval(() => {
@@ -140,7 +143,7 @@ export class MultiTerminalManager {
         }
       }, 1000);
     } else {
-      console.error('[MultiTerminalManager] Failed to open new window (popup blocked?)');
+      log.error('Failed to open new window (popup blocked?)');
       term.inUse = false;
       alert('Failed to open new terminal. Please allow popups for this site.');
     }
@@ -154,16 +157,16 @@ export class MultiTerminalManager {
   closeTerminal(unit: number): void {
     const term = this.terminals.get(unit);
     if (!term) {
-      console.error(`[MultiTerminalManager] Invalid unit: ${unit}`);
+      log.error(`Invalid unit: ${unit}`);
       return;
     }
 
     if (term.isPrimary) {
-      console.warn('[MultiTerminalManager] Cannot close primary terminal');
+      log.warn('Cannot close primary terminal');
       return;
     }
 
-    console.log(`[MultiTerminalManager] Closing terminal unit ${unit}`);
+    log.info(`Closing terminal unit ${unit}`);
 
     // Close window if still open
     if (term.windowRef && !term.windowRef.closed) {
@@ -228,6 +231,6 @@ export class MultiTerminalManager {
     // Destroy sync
     this.terminalSync.destroy();
 
-    console.log('[MultiTerminalManager] Destroyed');
+    log.info('Destroyed');
   }
 }

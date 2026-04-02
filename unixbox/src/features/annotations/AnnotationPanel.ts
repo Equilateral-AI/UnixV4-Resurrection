@@ -6,6 +6,9 @@
  */
 
 import type { SyscallAnnotation } from './AnnotationEngine';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('AnnotationPanel');
 
 export class AnnotationPanel {
   private container: HTMLElement;
@@ -76,7 +79,7 @@ export class AnnotationPanel {
 
     const closeButton = document.createElement('button');
     closeButton.className = 'annotation-panel-close';
-    closeButton.innerHTML = '✕';
+    closeButton.textContent = '\u2715';
     closeButton.style.cssText = `
       background: none;
       border: 1px solid #00ff00;
@@ -145,7 +148,7 @@ export class AnnotationPanel {
    */
   displayAnnotation(annotation: SyscallAnnotation): void {
     if (!this.panelElement) {
-      console.error('[AnnotationPanel] Panel not initialized');
+      log.error('Panel not initialized');
       return;
     }
 
@@ -153,7 +156,7 @@ export class AnnotationPanel {
 
     const content = this.panelElement.querySelector('.annotation-panel-content');
     if (!content) {
-      console.error('[AnnotationPanel] Content element not found');
+      log.error('Content element not found');
       return;
     }
 

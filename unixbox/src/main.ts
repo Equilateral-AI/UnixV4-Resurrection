@@ -8,6 +8,10 @@ import { MultiTerminalManager } from './features/multi-terminal/MultiTerminalMan
 import { TerminalSpawner } from './features/multi-terminal/TerminalSpawner';
 import { annotationEngine, annotationPanel } from './features/annotations';
 import { sourceOverlay } from './features/source-overlay';
+import { createLogger } from './utils/logger';
+import { TIMEOUTS } from './config';
+
+const log = createLogger('UnixBox');
 
 // Initialize terminal
 const terminal = new Terminal({
@@ -75,14 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
       containerId: 'era-selector-container',
       timeMachine: timeMachine,
       onEraSwitch: (eraId) => {
-        console.log(`[UnixBox] Era switch initiated: ${eraId}`);
+        log.info(`Era switch initiated: ${eraId}`);
       }
     });
-    console.log('[UnixBox] Era selector initialized');
+    log.info('Era selector initialized');
     // Export for debugging
-    (window as any).eraSelector = eraSelector;
+    window.eraSelector = eraSelector;
   } catch (error) {
-    console.error('[UnixBox] Failed to initialize era selector:', error);
+    log.error('Failed to initialize era selector:', error);
   }
 });
 
@@ -105,7 +109,7 @@ async function bootEmulator() {
     const eraConfig = timeMachine.getEra(eraId);
 
     if (!eraConfig) {
-      console.error(`[UnixBox] Unknown era: ${eraId}, falling back to v5`);
+      log.error(`Unknown era: ${eraId}, falling back to v5`);
     }
 
     const diskImage = eraConfig?.diskImage || '/disk-images/unix-v5.dsk';
@@ -113,6 +117,7 @@ async function bootEmulator() {
 
     // Update TimeMachine's internal state to match URL
     if (eraConfig && eraId !== 'v5') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private field for URL-based era sync
       (timeMachine as any).currentEraId = eraId;
     }
 
@@ -146,7 +151,7 @@ async function bootEmulator() {
     // Initialize Educational Annotations
     terminal.writeln('\x1b[33m[EDUCATIONAL] Initializing syscall annotations...\x1b[0m');
     annotationEngine.onSyscallDetected((syscallNum, annotation) => {
-      console.log(`[Educational] System call detected: ${syscallNum} (${annotation.name})`);
+      log.debug(`System call detected: ${syscallNum} (${annotation.name})`);
       annotationPanel.displayAnnotation(annotation);
       // Also show source code if available
       sourceOverlay.emitSyscallEvent(annotation.name);
@@ -168,22 +173,22 @@ async function bootEmulator() {
     pdp11.boot();
 
     // Hide loading overlay
-    if ((window as any).unixBoxControls?.hideLoading) {
-      (window as any).unixBoxControls.hideLoading();
+    if (window.unixBoxControls?.hideLoading) {
+      window.unixBoxControls.hideLoading();
     }
 
     // Log status
     const status = pdp11.getStatus();
-    console.log('[UnixBox] PDP-11 Status:', status);
+    log.info('PDP-11 Status:', status);
 
     // Start monitoring for syscalls after a short delay (let boot complete)
     setTimeout(() => {
       annotationEngine.startMonitoring();
-      console.log('[Educational] Syscall monitoring started');
+      log.info('Syscall monitoring started');
 
       // Show a demo annotation to demonstrate the feature
       annotationEngine.showAnnotation(1); // fork() - a classic syscall
-    }, 2000);
+    }, TIMEOUTS.SYSCALL_MONITOR_DELAY);
 
     // Add annotation toggle button to status bar
     const statusBar = document.getElementById('status-bar');
@@ -248,7 +253,7 @@ async function bootEmulator() {
   } catch (error) {
     terminal.writeln('\x1b[31m[ERROR] Failed to initialize emulator:\x1b[0m');
     terminal.writeln(`\x1b[31m${error}\x1b[0m`);
-    console.error('Emulator initialization failed:', error);
+    log.error('Emulator initialization failed:', error);
   }
 }
 
@@ -267,7 +272,7 @@ terminal.attachCustomKeyEventHandler((event: KeyboardEvent) => {
     terminal.clear();
 
     // Reboot with progress
-    setTimeout(() => bootWithProgress(), 500);
+    setTimeout(() => bootWithProgress(), TIMEOUTS.REBOOT_DELAY);
     return false;
   }
 
@@ -345,7 +350,7 @@ terminal.attachCustomKeyEventHandler((event: KeyboardEvent) => {
   if (event.ctrlKey && event.key === 'a') {
     event.preventDefault();
     annotationPanel.toggle();
-    console.log(`[Educational] Annotation panel ${annotationPanel.visible() ? 'shown' : 'hidden'}`);
+    log.debug(`Annotation panel ${annotationPanel.visible() ? 'shown' : 'hidden'}`);
     return false;
   }
 
@@ -364,23 +369,23 @@ async function bootWithProgress() {
 // Start the boot sequence with visual effects
 bootWithProgress();
 
-// Export instances for debugging
-(window as any).terminal = terminal;
-(window as any).pdp11 = pdp11;
-(window as any).multiTerminalManager = multiTerminalManager;
-(window as any).terminalSpawner = terminalSpawner;
-(window as any).annotationEngine = annotationEngine;
-(window as any).annotationPanel = annotationPanel;
-(window as any).sourceOverlay = sourceOverlay;
+// Export instances for debugging (accessible from browser console)
+window.terminal = terminal;
+window.pdp11 = pdp11;
+window.multiTerminalManager = multiTerminalManager;
+window.terminalSpawner = terminalSpawner;
+window.annotationEngine = annotationEngine;
+window.annotationPanel = annotationPanel;
+window.sourceOverlay = sourceOverlay;
 
-console.log('UnixBox initialized - starting PDP-11 emulator');
-console.log('');
-console.log('Keyboard shortcuts:');
-console.log('  Ctrl+R - Reset and reboot');
-console.log('  Ctrl+B - Boot menu');
-console.log('  Ctrl+S - CPU status');
-console.log('  Ctrl+A - Toggle annotations panel');
-console.log('');
-console.log('Educational Features:');
-console.log('  Syscall annotations available for:', annotationEngine.getAvailableSyscalls().join(', '));
-console.log('  Use annotationEngine.showAnnotation(N) to manually trigger');
+log.info('Initialized - starting PDP-11 emulator');
+log.info('');
+log.info('Keyboard shortcuts:');
+log.info('  Ctrl+R - Reset and reboot');
+log.info('  Ctrl+B - Boot menu');
+log.info('  Ctrl+S - CPU status');
+log.info('  Ctrl+A - Toggle annotations panel');
+log.info('');
+log.info('Educational Features:');
+log.info('  Syscall annotations available for:', annotationEngine.getAvailableSyscalls().join(', '));
+log.info('  Use annotationEngine.showAnnotation(N) to manually trigger');
