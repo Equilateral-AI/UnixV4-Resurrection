@@ -55,6 +55,25 @@
         "║       Type 'rkunix' at @ prompt (RK05 kernel) | From TUHS Archive          ║",
         "╚════════════════════════════════════════════════════════════════════════════╝"
       ]
+    },
+    "v7": {
+      "id": "v7",
+      "name": "Unix V7 (January 1979)",
+      "year": 1979,
+      "diskImage": "/disk-images/unix-v7-rk.dsk",
+      "bootCommand": "boot rk0",
+      "notes": "The 'last true Research Unix.' Basis for all modern Unix systems. From eunuchs/unix-archive.",
+      "features": ["Bourne shell", "awk", "make", "f77", "portable C", "uucp"],
+      "memory": "256 KB",
+      "banner": [
+        "╔════════════════════════════════════════════════════════════════════════════╗",
+        "║                        UNIX Seventh Edition                               ║",
+        "║                        January 1979                                       ║",
+        "║                                                                           ║",
+        "║             The last true Research Unix — basis for all                   ║",
+        "║             modern Unix, BSD, and Linux systems                            ║",
+        "╚════════════════════════════════════════════════════════════════════════════╝"
+      ]
     }
   },
   "defaultEra": "v5"

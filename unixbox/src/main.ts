@@ -164,7 +164,7 @@ async function bootEmulator() {
 
     // Boot the system
     terminal.writeln('\x1b[33m[EMULATOR] Loading boot ROM...\x1b[0m');
-    terminal.writeln(`\x1b[33m[EMULATOR] Mounting RK05 disk 0: ${diskImage}\x1b[0m`);
+    terminal.writeln(`\x1b[33m[EMULATOR] Mounting disk 0: ${diskImage}\x1b[0m`);
     terminal.writeln('');
     terminal.writeln(`\x1b[1;32m=== Starting PDP-11/40 (${eraName}) ===\x1b[0m`);
     terminal.writeln('');
@@ -231,21 +231,30 @@ async function bootEmulator() {
     terminal.writeln('\x1b[90m  System calls are automatically detected and annotated\x1b[0m');
     terminal.writeln('\x1b[90m  Click "Annotations" button or press Ctrl+A to toggle panel\x1b[0m');
     terminal.writeln('');
+    // Era-specific boot instructions
+    const bootInstructions: Record<string, { kernel: string; games: string }> = {
+      v4: { kernel: 'unix', games: '/usr/games/chess, wump, bj, ttt, moo' },
+      v5: { kernel: 'unix', games: '/usr/games/chess, wump, bj, ttt, moo' },
+      v6: { kernel: 'rkunix', games: '/usr/games/chess, wump, bj, ttt, moo' },
+      v7: { kernel: 'unix', games: '/usr/games — arithmetic, backgammon, fish, hangman, wump' },
+    };
+    const boot = bootInstructions[eraId] || bootInstructions.v5;
+
     terminal.writeln('\x1b[1;33m═══════════════════════════════════════════════════════════════\x1b[0m');
-    terminal.writeln('\x1b[1;33m  HOW TO BOOT UNIX V5 (1974)\x1b[0m');
+    terminal.writeln(`\x1b[1;33m  HOW TO BOOT ${eraName.toUpperCase()}\x1b[0m`);
     terminal.writeln('\x1b[1;33m═══════════════════════════════════════════════════════════════\x1b[0m');
     terminal.writeln('');
     terminal.writeln('\x1b[1;36m  Step 1: PDP-11 Boot Loader\x1b[0m');
     terminal.writeln('\x1b[32m          Boot>  \x1b[1;37mboot rk0\x1b[0m\x1b[90m     (load from RK05 disk)\x1b[0m');
     terminal.writeln('');
     terminal.writeln('\x1b[1;36m  Step 2: Unix Boot Loader\x1b[0m');
-    terminal.writeln('\x1b[32m          @  \x1b[1;37munix\x1b[0m\x1b[90m              (load the kernel)\x1b[0m');
+    terminal.writeln(`\x1b[32m          @  \x1b[1;37m${boot.kernel}\x1b[0m\x1b[90m              (load the kernel)\x1b[0m`);
     terminal.writeln('');
     terminal.writeln('\x1b[1;36m  Step 3: Login\x1b[0m');
     terminal.writeln('\x1b[32m          login:  \x1b[1;37mroot\x1b[0m\x1b[90m          (no password needed)\x1b[0m');
     terminal.writeln('');
     terminal.writeln('\x1b[90m  Users: root, ken, dmr  |  Commands: ls, cat, who, ps, ed\x1b[0m');
-    terminal.writeln('\x1b[90m  Games: /usr/games/chess, wump, bj, ttt, moo\x1b[0m');
+    terminal.writeln(`\x1b[90m  Games: ${boot.games}\x1b[0m`);
     terminal.writeln('');
     terminal.writeln('\x1b[1;33m═══════════════════════════════════════════════════════════════\x1b[0m');
     terminal.writeln('');
