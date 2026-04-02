@@ -1,17 +1,18 @@
-# Unix V4/V5/V6 Resurrection Project
+# Unix V4/V5/V6/V7 Resurrection Project
 
 **A Christmas Gift from Agentic Santa - December 2025**
 
-Run Unix from 1973-1975 in your browser. Experience computing history.
+Run Unix from 1973-1979 in your browser. Experience computing history.
 
-**Status**: Complete - All three eras working with Time Machine switching and educational overlays
+**Status**: Complete - All four eras working with Time Machine switching and educational overlays
 
 ## What This Is
 
-This repository contains Unix V4, V5, and V6 running in a browser-based PDP-11 emulator:
+This repository contains Unix V4, V5, V6, and V7 running in a browser-based PDP-11 emulator:
 - **Unix V4** (1973) - Recovered tape image from Bell Labs, converted to disk
 - **Unix V5** (1974) - Complete source code from TUHS archive
 - **Unix V6** (1975) - Lions' Commentary era, from TUHS v6root archive
+- **Unix V7** (1979) - The "last true Research Unix," basis for all modern Unix/BSD/Linux
 
 ## Source Code Statistics
 
@@ -46,7 +47,7 @@ The kernel code is split between two legendary programmers:
 
 ### Games (`usr/games/`)
 
-Seven authentic 1974 games survive as compiled PDP-11 executables:
+Six authentic 1974 games survive as compiled PDP-11 executables on the V4/V5 disk:
 
 | Game | Size | Description |
 |------|------|-------------|
@@ -59,7 +60,24 @@ Seven authentic 1974 games survive as compiled PDP-11 executables:
 
 Run them in the UnixBox emulator: boot into Unix V5 and type `/usr/games/wump`.
 
-These are original binaries from the tape — source code was not included in the V4/V5 distribution. For game source from later editions, see the [TUHS Archive](https://www.tuhs.org/).
+### V7 Game Source Code (1979)
+
+Full source code from the [TUHS Archive](https://www.tuhs.org/) is included at `unixbox/public/src/games/v7/`:
+
+| File | Game | Description |
+|------|------|-------------|
+| `arithmetic.c` | Arithmetic | Math drill — random arithmetic problems |
+| `backgammon.c` | Backgammon | Full backgammon with beginner/intermediate/expert AI |
+| `fish.c` | Go Fish | Card game |
+| `fortune.c` | Fortune | Random fortune cookie quotes |
+| `hangman.c` | Hangman | Classic word guessing game |
+| `quiz.c` | Quiz | Trivia from knowledge files |
+| `wump.c` | Wumpus | Hunt the Wumpus — the classic! |
+| `chess/` | Chess | Complete chess engine (26 files: C, PDP-11 assembly, makefile) |
+
+V6 has one surviving game source: `quiz.c` (ancestor of the V7 version, with old-style C operators).
+
+See [`unixbox/docs/GAMES.md`](unixbox/docs/GAMES.md) for detailed game lineage and licensing info.
 
 ### C Compiler
 - `usr/c/c0*.c` - Lexer and parser
@@ -185,7 +203,7 @@ npm run dev
 | Feature | Description |
 |---------|-------------|
 | **PDP-11 Emulator** | Full CPU emulation in JavaScript |
-| **Time Machine** | Switch between Unix V4, V5, V6 eras |
+| **Time Machine** | Switch between Unix V4, V5, V6, V7 eras |
 | **Multi-TTY** | Up to 8 terminals via BroadcastChannel |
 | **Syscall Annotations** | Real-time explanations of system calls |
 | **Source Overlay** | View original 1974 C source code |
@@ -216,9 +234,10 @@ See the actual 1974 C code as it runs:
 
 **Time Machine Mode**
 Experience how Unix evolved:
-- **Unix V4 (1973)**: First version in C - tape converted to disk, working!
-- **Unix V5 (1974)**: Fully working - the primary experience
-- **Unix V6 (1975)**: Placeholder - need authentic V6 disk image from TUHS
+- **Unix V4 (1973)**: First version in C — tape converted to disk, working!
+- **Unix V5 (1974)**: Fully working — the primary experience
+- **Unix V6 (1975)**: Lions' Commentary era — from TUHS archive
+- **Unix V7 (1979)**: The last Research Unix — Bourne shell, awk, make, full game sources
 
 **Multi-User Experience**
 Unix was revolutionary as a multi-user system. Click "+ New TTY" to:
@@ -255,13 +274,16 @@ The recovered Unix V4 tape image was in SIMH tape format, not a bootable disk. W
 
 | Era | Status | Kernel Size | Notes |
 |-----|--------|-------------|-------|
-| **V4 (1973)** | Working | 27,624 bytes | Tape converted to disk - verified via Playwright |
+| **V4 (1973)** | Working | 27,624 bytes | Tape converted to disk — verified via Playwright |
 | **V5 (1974)** | Working | 25,802 bytes | Primary experience, fully tested |
-| **V6 (1975)** | Working | 28,636 bytes | From TUHS archive - use `rkunix` at @ prompt |
+| **V6 (1975)** | Working | 28,636 bytes | From TUHS archive — use `rkunix` at @ prompt |
+| **V7 (1979)** | Working | — | RK05 + RL02 images from eunuchs/unix-archive |
 
 **V6 Note**: Downloaded from TUHS (v6root.gz), converted to bootable RK05 disk image. Boot with `rkunix` (RK05 kernel) at the @ prompt instead of `unix`.
 
-**Verification**: Era switching tested with Playwright automation - confirmed different filesystems load (V4 has Jun 1974 dates, V5 has Nov 1974 dates, V6 has Jul 1975 dates).
+**V7 Note**: Two disk images available — RK05 (2MB, default) for the same controller as V4-V6, and RL02 (10MB) with the fuller V7 distribution. Includes Bourne shell, awk, make, and game source code.
+
+**Verification**: Era switching tested with Playwright automation — confirmed different filesystems load (V4 has Jun 1974 dates, V5 has Nov 1974 dates, V6 has Jul 1975 dates).
 
 ---
 
