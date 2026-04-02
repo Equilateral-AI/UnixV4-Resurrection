@@ -7,6 +7,10 @@
  */
 
 import { Terminal } from 'xterm';
+import { createLogger } from '../utils/logger';
+import { DEFAULT_DISK_IMAGE, EMULATOR_SCRIPTS, PDP11 } from '../config';
+
+const log = createLogger('PDP11Bridge');
 
 // Type declarations are in src/types/pdp11.d.ts
 
@@ -49,43 +53,37 @@ export class PDP11Bridge {
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
-      console.warn('[PDP11Bridge] Already initialized');
+      log.warn('Already initialized');
       return;
     }
 
-    console.log('[PDP11Bridge] Loading emulator scripts...');
+    log.info('Loading emulator scripts...');
 
     // Define CPU_TYPE before loading iopage.js (required by emulator)
     // 70 = PDP-11/70 (22-bit addressing, unibus map)
     // 45 = PDP-11/45 (18-bit addressing)
-    (window as any).CPU_TYPE = 70;
+    window.CPU_TYPE = PDP11.CPU_TYPE;
 
     // Scripts must be loaded in dependency order
     // IMPORTANT: vt52.js must load before iopage.js (iopage calls vt52Initialize)
-    const scripts = [
-      '/vendor/pdp11/pdp11.js',      // Core CPU emulation
-      '/vendor/pdp11/vt52.js',       // VT52 terminal emulation (before iopage!)
-      '/vendor/pdp11/iopage.js',     // I/O page and device emulation
-      '/vendor/pdp11/bootcode.js',   // Boot ROM code
-      '/vendor/pdp11/fpp.js',        // Floating Point Processor
-    ];
+    const scripts = [...EMULATOR_SCRIPTS];
 
     try {
       await this.loadScriptsSequentially(scripts);
       this.scriptsLoaded = true;
-      console.log('[PDP11Bridge] All emulator scripts loaded successfully');
+      log.info('All emulator scripts loaded successfully');
 
       // Configure default disk
       this.configureDisk({
         drive: 0,
-        url: '/disk-images/unix-v5.dsk',
+        url: DEFAULT_DISK_IMAGE,
         mounted: true
       });
 
       this.initialized = true;
-      console.log('[PDP11Bridge] Emulator initialized');
+      log.info('Emulator initialized');
     } catch (error) {
-      console.error('[PDP11Bridge] Failed to load emulator scripts:', error);
+      log.error('Failed to load emulator scripts:', error);
       throw error;
     }
   }
@@ -109,12 +107,12 @@ export class PDP11Bridge {
       script.async = false; // Maintain execution order
 
       script.onload = () => {
-        console.log(`[PDP11Bridge] Loaded: ${src}`);
+        log.debug(`Loaded: ${src}`);
         resolve();
       };
 
       script.onerror = (error) => {
-        console.error(`[PDP11Bridge] Failed to load: ${src}`, error);
+        log.error(`Failed to load: ${src}`, error);
         reject(new Error(`Failed to load script: ${src}`));
       };
 
@@ -127,7 +125,7 @@ export class PDP11Bridge {
    */
   configureDisk(config: DiskConfig): void {
     this.diskConfigs[config.drive] = config;
-    console.log(`[PDP11Bridge] Configured disk drive ${config.drive}: ${config.url}`);
+    log.info(`Configured disk drive ${config.drive}: ${config.url}`);
   }
 
   /**
@@ -166,7 +164,7 @@ export class PDP11Bridge {
       }
     });
 
-    console.log('[PDP11Bridge] Terminal connected');
+    log.info('Terminal connected');
   }
 
   /**
@@ -179,10 +177,10 @@ export class PDP11Bridge {
     }
 
     if (!this.terminal) {
-      console.warn('[PDP11Bridge] No terminal connected. Call connectTerminal() first.');
+      log.warn('No terminal connected. Call connectTerminal() first.');
     }
 
-    console.log('[PDP11Bridge] Booting PDP-11...');
+    log.info('Booting PDP-11...');
 
     // Override disk URLs if configured
     if (this.diskConfigs.length > 0) {
@@ -190,7 +188,7 @@ export class PDP11Bridge {
     }
 
     window.boot();
-    console.log('[PDP11Bridge] Boot sequence initiated');
+    log.info('Boot sequence initiated');
   }
 
   /**
@@ -202,6 +200,7 @@ export class PDP11Bridge {
     const diskConfigs = this.diskConfigs;
 
     // Intercept fetch for .zst files - return 404 quickly so it falls back to XHR
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- monkey-patching fetch for disk image interception
     (window as any).fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
       const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
 
@@ -214,6 +213,7 @@ export class PDP11Bridge {
     };
 
     // Intercept XHR to redirect disk requests to configured URLs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- monkey-patching XHR for disk image interception
     (window as any).XMLHttpRequest = function() {
       const xhr = new originalXHR();
       const originalOpen = xhr.open;
@@ -280,7 +280,7 @@ export class PDP11Bridge {
       throw new Error('Emulator scripts not loaded. Call initialize() first.');
     }
 
-    console.log('[PDP11Bridge] Resetting PDP-11...');
+    log.info('Resetting PDP-11...');
     window.reset();
 
     if (window.vt52Reset) {
@@ -296,7 +296,7 @@ export class PDP11Bridge {
       throw new Error('Emulator scripts not loaded. Call initialize() first.');
     }
 
-    console.log('[PDP11Bridge] Starting CPU execution...');
+    log.debug('Starting CPU execution...');
     if (window.run) {
       window.run();
     }

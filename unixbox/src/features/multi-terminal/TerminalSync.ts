@@ -16,6 +16,10 @@ export interface TerminalMessage {
   tabId: string;
 }
 
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('TerminalSync');
+
 export type OutputCallback = (unit: number, data: string) => void;
 export type InputCallback = (unit: number, data: string) => void;
 
@@ -38,7 +42,7 @@ export class TerminalSync {
 
     this.channel.addEventListener('message', this.handleMessage.bind(this));
 
-    console.log(`[TerminalSync] Initialized ${isPrimary ? 'PRIMARY' : 'SECONDARY'} tab (${this.tabId})`);
+    log.info(`Initialized ${isPrimary ? 'PRIMARY' : 'SECONDARY'} tab (${this.tabId})`);
   }
 
   /**
@@ -61,7 +65,7 @@ export class TerminalSync {
 
     switch (msg.type) {
       case 'register':
-        console.log(`[TerminalSync] Unit ${msg.unit} registered in tab ${msg.tabId}`);
+        log.debug(`Unit ${msg.unit} registered in tab ${msg.tabId}`);
         this.registeredUnits.add(msg.unit);
 
         // If we're primary, acknowledge with a pong
@@ -76,7 +80,7 @@ export class TerminalSync {
         break;
 
       case 'unregister':
-        console.log(`[TerminalSync] Unit ${msg.unit} unregistered from tab ${msg.tabId}`);
+        log.debug(`Unit ${msg.unit} unregistered from tab ${msg.tabId}`);
         this.registeredUnits.delete(msg.unit);
         break;
 

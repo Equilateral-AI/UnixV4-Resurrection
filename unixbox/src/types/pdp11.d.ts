@@ -193,7 +193,9 @@ declare function loadTapeImage(
  * Extended Window interface with PDP-11 globals
  */
 interface Window {
+  // --- PDP-11 emulator globals (set by vendor scripts) ---
   CPU: PDP11CPU;
+  CPU_TYPE: number;
   boot: typeof boot;
   reset: typeof reset;
   run: typeof run;
@@ -206,4 +208,17 @@ interface Window {
   vt52Input: typeof vt52Input;
   loadDiskImage: typeof loadDiskImage;
   loadTapeImage: typeof loadTapeImage;
+
+  // --- UnixBox debug exports (attached in main.ts for console access) ---
+  terminal: import('xterm').Terminal;
+  pdp11: import('../emulator/pdp11-bridge').PDP11Bridge;
+  multiTerminalManager: import('../features/multi-terminal/MultiTerminalManager').MultiTerminalManager;
+  terminalSpawner: import('../features/multi-terminal/TerminalSpawner').TerminalSpawner;
+  annotationEngine: import('../features/annotations/AnnotationEngine').AnnotationEngine;
+  annotationPanel: import('../features/annotations/AnnotationPanel').AnnotationPanel;
+  sourceOverlay: import('../features/source-overlay/SourceOverlay').SourceOverlay;
+  eraSelector: import('../features/time-machine/EraSelector').EraSelector;
+  SourcePanel: typeof import('../features/source-overlay/SourcePanel').SourcePanel;
+  initSourceOverlay: () => import('../features/source-overlay/SourcePanel').SourcePanel;
+  unixBoxControls: { hideLoading?: () => void };
 }

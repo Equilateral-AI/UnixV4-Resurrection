@@ -5,6 +5,9 @@
  */
 
 import { TimeMachine, EraConfig } from './TimeMachine';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('EraSelector');
 
 export interface EraSelectorOptions {
   containerId: string;
@@ -97,7 +100,7 @@ export class EraSelector {
         e.preventDefault();
 
         if (this.switching) {
-          console.log('[EraSelector] Already switching eras, please wait...');
+          log.debug('Already switching eras, please wait...');
           return;
         }
 
@@ -136,9 +139,9 @@ export class EraSelector {
       // Perform era switch
       await this.timeMachine.switchEra(eraId);
 
-      console.log(`[EraSelector] Successfully switched to era: ${eraId}`);
+      log.info(`Successfully switched to era: ${eraId}`);
     } catch (error) {
-      console.error('[EraSelector] Era switch failed:', error);
+      log.error('Era switch failed:', error);
       // Show error message
       this.showError('Failed to switch era. Please try again.');
     } finally {

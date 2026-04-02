@@ -60,7 +60,7 @@ export class SourcePanel {
 
     this.closeButton = document.createElement('button');
     this.closeButton.className = 'source-panel-close';
-    this.closeButton.innerHTML = '&times;';
+    this.closeButton.textContent = '\u00D7';
     this.closeButton.onclick = () => this.hide();
 
     this.headerElement.appendChild(title);

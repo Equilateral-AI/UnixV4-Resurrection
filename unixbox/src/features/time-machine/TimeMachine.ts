@@ -8,6 +8,10 @@
 import { Terminal } from 'xterm';
 import { PDP11Bridge } from '../../emulator/pdp11-bridge';
 import eraConfigsData from './era-configs.json';
+import { createLogger } from '../../utils/logger';
+import { TIMEOUTS } from '../../config';
+
+const log = createLogger('TimeMachine');
 
 export interface EraConfig {
   id: string;
@@ -109,11 +113,11 @@ export class TimeMachine {
     }
 
     if (eraId === this.currentEraId) {
-      console.log(`[TimeMachine] Already in era: ${eraId}`);
+      log.debug(`Already in era: ${eraId}`);
       return;
     }
 
-    console.log(`[TimeMachine] Switching era: ${this.currentEraId} -> ${eraId}`);
+    log.info(`Switching era: ${this.currentEraId} -> ${eraId}`);
 
     // Show brief animation before reload
     if (this.terminal) {
@@ -129,7 +133,7 @@ export class TimeMachine {
     }
 
     // Wait a moment for visual feedback
-    await this.sleep(800);
+    await this.sleep(TIMEOUTS.ERA_SWITCH_DELAY);
 
     // Reload page with era parameter - this ensures disk cache is cleared
     const url = new URL(window.location.href);

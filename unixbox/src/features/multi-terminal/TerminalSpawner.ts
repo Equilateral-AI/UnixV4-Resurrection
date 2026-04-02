@@ -5,6 +5,10 @@
  */
 
 import { MultiTerminalManager } from './MultiTerminalManager';
+import { createLogger } from '../../utils/logger';
+import { TIMEOUTS } from '../../config';
+
+const log = createLogger('TerminalSpawner');
 
 export class TerminalSpawner {
   private manager: MultiTerminalManager;
@@ -23,7 +27,7 @@ export class TerminalSpawner {
     this.statusBarElement = document.getElementById('status-bar');
 
     if (!this.statusBarElement) {
-      console.error('[TerminalSpawner] Status bar not found');
+      log.error('Status bar not found');
       return;
     }
 
@@ -43,7 +47,7 @@ export class TerminalSpawner {
     // Add to status bar
     this.statusBarElement.appendChild(container);
 
-    console.log('[TerminalSpawner] UI injected');
+    log.info('UI injected');
   }
 
   /**
@@ -130,7 +134,7 @@ export class TerminalSpawner {
             this.spawnButton.style.background = '#001a00';
             this.spawnButton.style.color = '#00ff00';
           }
-        }, 200);
+        }, TIMEOUTS.BUTTON_FLASH_DURATION);
       }
     }
   }
@@ -151,7 +155,7 @@ export class TerminalSpawner {
         if (countElement) {
           countElement.style.color = '#00ff00';
         }
-      }, 300);
+      }, TIMEOUTS.COUNT_FLASH_DURATION);
     }
   }
 
@@ -209,7 +213,7 @@ export class TerminalSpawner {
     setTimeout(() => {
       document.body.removeChild(notification);
       document.head.removeChild(style);
-    }, 2000);
+    }, TIMEOUTS.NOTIFICATION_DURATION);
   }
 
   /**
@@ -224,6 +228,6 @@ export class TerminalSpawner {
       this.countDisplay.parentNode.removeChild(this.countDisplay);
     }
 
-    console.log('[TerminalSpawner] UI destroyed');
+    log.info('UI destroyed');
   }
 }

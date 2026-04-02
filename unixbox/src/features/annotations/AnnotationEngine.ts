@@ -6,6 +6,10 @@
  */
 
 import annotationsData from './syscall-annotations.json';
+import { createLogger } from '../../utils/logger';
+import { TIMEOUTS } from '../../config';
+
+const log = createLogger('AnnotationEngine');
 
 export interface SyscallAnnotation {
   name: string;
@@ -52,7 +56,7 @@ export class AnnotationEngine {
       this.annotations.set(num, annotation);
     }
 
-    console.log(`[AnnotationEngine] Loaded ${this.annotations.size} syscall annotations`);
+    log.info(`Loaded ${this.annotations.size} syscall annotations`);
   }
 
   /**
@@ -91,24 +95,24 @@ export class AnnotationEngine {
    */
   startMonitoring(): void {
     if (this.monitoring) {
-      console.warn('[AnnotationEngine] Already monitoring');
+      log.warn('Already monitoring');
       return;
     }
 
     // Verify CPU is available
-    if (typeof window === 'undefined' || !(window as any).CPU) {
-      console.error('[AnnotationEngine] CPU not available, cannot start monitoring');
+    if (typeof window === 'undefined' || !window.CPU) {
+      log.error('CPU not available, cannot start monitoring');
       return;
     }
 
     this.monitoring = true;
-    console.log('[AnnotationEngine] Started monitoring for syscalls');
+    log.info('Started monitoring for syscalls');
 
-    // Poll CPU state every 100ms to detect syscalls
+    // Poll CPU state to detect syscalls
     // In a real implementation, we'd hook the emulator's instruction execution
     this.monitorInterval = window.setInterval(() => {
       this.checkForSyscall();
-    }, 100) as unknown as number;
+    }, TIMEOUTS.SYSCALL_POLL_INTERVAL) as unknown as number;
   }
 
   /**
@@ -125,7 +129,7 @@ export class AnnotationEngine {
     }
 
     this.monitoring = false;
-    console.log('[AnnotationEngine] Stopped monitoring for syscalls');
+    log.info('Stopped monitoring for syscalls');
   }
 
   /**
@@ -141,7 +145,7 @@ export class AnnotationEngine {
    */
   private checkForSyscall(): void {
     try {
-      const cpu = (window as any).CPU;
+      const cpu = window.CPU;
       if (!cpu || !cpu.memory) {
         return;
       }
@@ -174,7 +178,7 @@ export class AnnotationEngine {
         this.lastPC = currentPC;
       }
     } catch (error) {
-      console.error('[AnnotationEngine] Error checking for syscall:', error);
+      log.error('Error checking for syscall:', error);
     }
   }
 
@@ -185,18 +189,18 @@ export class AnnotationEngine {
     const annotation = this.getAnnotation(syscallNum);
 
     if (annotation) {
-      console.log(`[AnnotationEngine] Detected syscall ${syscallNum}: ${annotation.name}`);
+      log.debug(`Detected syscall ${syscallNum}: ${annotation.name}`);
 
       for (const callback of this.callbacks) {
         try {
           callback(syscallNum, annotation);
         } catch (error) {
-          console.error('[AnnotationEngine] Error in syscall callback:', error);
+          log.error('Error in syscall callback:', error);
         }
       }
     } else {
       // Syscall detected but no annotation available
-      console.log(`[AnnotationEngine] Detected syscall ${syscallNum} (no annotation available)`);
+      log.debug(`Detected syscall ${syscallNum} (no annotation available)`);
     }
   }
 
@@ -210,7 +214,7 @@ export class AnnotationEngine {
     if (annotation) {
       this.notifySyscallDetected(syscallNumber);
     } else {
-      console.warn(`[AnnotationEngine] No annotation available for syscall ${syscallNumber}`);
+      log.warn(`No annotation available for syscall ${syscallNumber}`);
     }
   }
 

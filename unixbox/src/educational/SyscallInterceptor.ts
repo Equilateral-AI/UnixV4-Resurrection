@@ -18,6 +18,9 @@
 
 import { educationalEngine } from './EducationalEngine';
 import type { SyscallEvent } from '../types/educational';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('SyscallInterceptor');
 
 /**
  * Unix V4 system call names indexed by syscall number
@@ -100,12 +103,12 @@ export class SyscallInterceptor {
    */
   install(): void {
     if (this.installed) {
-      console.warn('[SyscallInterceptor] Already installed');
+      log.warn('Already installed');
       return;
     }
 
     if (typeof window.trap !== 'function') {
-      console.error('[SyscallInterceptor] window.trap not found. Emulator not loaded?');
+      log.error('window.trap not found. Emulator not loaded?');
       throw new Error('window.trap not available. Load emulator scripts first.');
     }
 
@@ -124,7 +127,7 @@ export class SyscallInterceptor {
     };
 
     this.installed = true;
-    console.log('[SyscallInterceptor] Installed successfully');
+    log.info('Installed successfully');
   }
 
   /**
@@ -134,7 +137,7 @@ export class SyscallInterceptor {
    */
   private handleSyscall(): void {
     if (!window.CPU) {
-      console.error('[SyscallInterceptor] window.CPU not available');
+      log.error('window.CPU not available');
       return;
     }
 
@@ -175,8 +178,8 @@ export class SyscallInterceptor {
 
     // Optional: Log to console for debugging
     if (this.shouldLog(syscallNumber)) {
-      console.log(
-        `[SyscallInterceptor] #${this.syscallCount} ${name}(${syscallNumber}) ` +
+      log.debug(
+        `#${this.syscallCount} ${name}(${syscallNumber}) ` +
         `args=[${args.map(a => a.toString(8)).join(', ')}] pc=${pc.toString(8)}`
       );
     }
@@ -201,7 +204,7 @@ export class SyscallInterceptor {
    */
   uninstall(): void {
     if (!this.installed) {
-      console.warn('[SyscallInterceptor] Not installed');
+      log.warn('Not installed');
       return;
     }
 
@@ -211,7 +214,7 @@ export class SyscallInterceptor {
     }
 
     this.installed = false;
-    console.log('[SyscallInterceptor] Uninstalled');
+    log.info('Uninstalled');
   }
 
   /**

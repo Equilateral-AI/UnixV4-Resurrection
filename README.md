@@ -136,7 +136,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 and login as `root` (no password).
+Open http://localhost:3000 and login as `root` (no password).
 
 The PDP-11 emulator and all vendor files are included in the repo — no additional setup required. For detailed configuration, see `unixbox/docs/SETUP_COMPLETE.md` and `unixbox/docs/PDP11_INTEGRATION_COMPLETE.md`.
 
@@ -177,7 +177,7 @@ The `unixbox/` directory contains a complete web-based Unix experience:
 cd unixbox
 npm install
 npm run dev
-# Open http://localhost:5173
+# Open http://localhost:3000
 ```
 
 ### Features
