@@ -10,6 +10,7 @@ export const DISK_IMAGES = {
   v4: '/disk-images/unix-v4-new.dsk',
   v5: '/disk-images/unix-v5.dsk',
   v6: '/disk-images/unix-v6.dsk',
+  v7: '/disk-images/unix-v7-rk.dsk',
 } as const;
 
 /** Default disk image (V5 is the primary experience) */
